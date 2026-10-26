@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HE ICCU — 협력업체 통합 관리 시스템</title>
+<style>
+:root{
+  --primary:#1a3c6e;--accent:#2e7de9;--danger:#e53e3e;
+  --warning:#d69e2e;--success:#38a169;--purple:#6b46c1;
+  --bg:#f0f4f8;--card:#fff;--text:#2d3748;--border:#e2e8f0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;}
+header{background:linear-gradient(135deg,#1a3c6e,#2a5298);color:#fff;padding:13px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);position:sticky;top:0;z-index:200;}
+header h1{font-size:1.1rem;}
+header h1 span{color:#90cdf4;}
+#clock{font-size:.78rem;opacity:.85;}
+.layout{display:flex;flex:1;}
+aside{width:220px;background:#1e2a3a;color:#cbd5e0;display:flex;flex-direction:column;
+  padding:14px 0;position:sticky;top:49px;height:calc(100vh - 49px);overflow-y:auto;flex-shrink:0;}
+.nav-section{font-size:.65rem;color:#718096;padding:10px 16px 3px;letter-spacing:1px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;cursor:pointer;
+  font-size:.84rem;transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.active{background:rgba(46,125,233,.2);color:#90cdf4;border-left-color:#2e7de9;}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;
+  padding:1px 7px;font-size:.68rem;font-weight:700;}
+main{flex:1;padding:22px;overflow-y:auto;}
+.page{display:none;}.page.active{display:block;}
+.page-title{font-size:1.15rem;font-weight:700;color:var(--primary);margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--card);border-radius:12px;padding:14px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);border-top:4px solid var(--accent);}
+.stat-card.danger{border-top-color:var(--danger);}
+.stat-card.warning{border-top-color:var(--warning);}
+.stat-card.success{border-top-color:var(--success);}
+.stat-card.purple{border-top-color:var(--purple);}
+.stat-card h4{font-size:.7rem;color:#718096;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.stat-card p{font-size:1.8rem;font-weight:700;}
+.stat-card.danger p{color:var(--danger);}
+.stat-card.warning p{color:var(--warning);}
+.stat-card.success p{color:var(--success);}
+.card{background:var(--card);border-radius:14px;padding:20px;
+  box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.card-header h2{font-size:.97rem;color:var(--primary);font-weight:700;}
+.btn{padding:7px 15px;border:none;border-radius:8px;font-size:.81rem;font-weight:600;
+  cursor:pointer;transition:opacity .2s,transform .1s;}
+.btn:hover{opacity:.87;transform:translateY(-1px);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-success{background:var(--success);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-ghost{background:#edf2f7;color:#4a5568;}
+.btn-warning{background:var(--warning);color:#fff;}
+.btn-sm{padding:5px 11px;font-size:.76rem;}
+.btn-xs{padding:3px 8px;font-size:.71rem;border-radius:6px;}
+.table-wrap{overflow-x:auto;position:relative;}
+table{width:100%;border-collapse:collapse;font-size:.8rem;}
+thead tr{background:#eef2ff;}
+th{padding:9px 11px;text-align:left;font-weight:700;color:var(--primary);
+  white-space:nowrap;border-bottom:2px solid var(--border);position:relative;}
+td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:#f7f9ff;}
+tr.row-danger td{background:#fff5f5!important;}
+tr.row-danger td:first-child{border-left:4px solid var(--danger);}
+tr.row-warning td{background:#fffff0!important;}
+tr.row-warning td:first-child{border-left:4px solid var(--warning);}
+tr.row-success td{background:#f0fff4!important;}
+tr.row-success td:first-child{border-left:4px solid var(--success);}
+tr.row-hidden{display:none;}
+/* 인라인 편집 */
+.editable-cell{cursor:pointer;border-radius:4px;padding:2px 5px;transition:background .15s;display:inline-block;min-width:30px;}
+.editable-cell:hover{background:#eff6ff;outline:1px dashed var(--accent);}
+.editable-cell.editing{background:#fff;outline:2px solid var(--accent);}
+.inline-input{border:none;outline:none;background:transparent;font-size:.8rem;
+  font-family:inherit;color:var(--text);width:100%;min-width:60px;}
+.inline-select{border:1px solid var(--accent);border-radius:4px;background:#fff;
+  font-size:.78rem;font-family:inherit;color:var(--text);cursor:pointer;padding:2px 4px;}
+/* ECO 이력 */
+.eco-history-panel{background:#f8faff;border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;margin:6px 0;}
+.eco-history-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--border);font-size:.79rem;}
+.eco-history-item:last-child{border-bottom:none;}
+.eco-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);
+  flex-shrink:0;margin-top:5px;}
+.eco-dot.latest{background:var(--success);}
+/* 컬럼 필터 */
+.col-filter-btn{display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border:none;background:transparent;
+  cursor:pointer;color:#a0aec0;font-size:.7rem;margin-left:4px;
+  border-radius:3px;vertical-align:middle;transition:all .15s;padding:0;}
+.col-filter-btn:hover{background:#c7d2fe;color:var(--primary);}
+.col-filter-btn.active{color:#2e7de9;background:#dbeafe;}
+.filter-dropdown{position:fixed;z-index:500;background:#fff;border:1.5px solid var(--border);
+  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:180px;max-height:280px;
+  overflow-y:auto;display:none;padding:8px 0;}
+.filter-dropdown.open{display:block;}
+.filter-dropdown-header{display:flex;align-items:center;justify-content:space-between;
+  padding:6px 12px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.filter-dropdown-header span{font-size:.75rem;font-weight:700;color:var(--primary);}
+.filter-dropdown-header button{font-size:.7rem;border:none;background:none;cursor:pointer;color:var(--accent);}
+.filter-item{display:flex;align-items:center;gap:7px;padding:5px 12px;
+  cursor:pointer;font-size:.79rem;transition:background .1s;}
+.filter-item:hover{background:#f0f4ff;}
+.filter-item input[type=checkbox]{cursor:pointer;width:13px;height:13px;accent-color:var(--accent);}
+.filter-active-bar{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;
+  padding:5px 10px;margin-bottom:10px;font-size:.76rem;color:#1d4ed8;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+/* 벌크 패널 */
+.bulk-panel{background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+  border:2px solid #bfdbfe;border-radius:14px;padding:18px 20px;margin-bottom:18px;}
+.bulk-panel h3{font-size:.95rem;color:var(--primary);font-weight:700;margin-bottom:4px;}
+.bulk-panel p{font-size:.78rem;color:#718096;margin-bottom:14px;}
+.bulk-step{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.82rem;font-weight:600;color:var(--primary);}
+.bulk-step-num{width:22px;height:22px;background:var(--accent);color:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;}
+.bulk-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px;}
+.bulk-form .form-group{margin-bottom:0;}
+.bulk-selected-bar{background:#fff;border:1.5px solid var(--accent);border-radius:8px;
+  padding:8px 14px;margin:10px 0;font-size:.8rem;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.bulk-selected-bar strong{color:var(--accent);}
+.check-th{width:36px;text-align:center!important;}
+.check-td{text-align:center;}
+.part-checkbox{cursor:pointer;width:15px;height:15px;accent-color:var(--accent);}
+tr.selected-row td{background:#eff6ff!important;}
+tr.selected-row td:first-child{border-left:4px solid var(--accent)!important;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;
+  font-size:.69rem;font-weight:700;white-space:nowrap;}
+.badge-danger{background:#fff5f5;color:var(--danger);border:1px solid #fed7d7;}
+.badge-warning{background:#fffff0;color:#b7791f;border:1px solid #fefcbf;}
+.badge-success{background:#f0fff4;color:var(--success);border:1px solid #c6f6d5;}
+.badge-info{background:#ebf8ff;color:#2b6cb0;border:1px solid #bee3f8;}
+.badge-purple{background:#faf5ff;color:#6b46c1;border:1px solid #e9d8fd;}
+.badge-gray{background:#f7fafc;color:#718096;border:1px solid #e2e8f0;}
+.badge-eco{background:#fffbeb;color:#92400e;border:1px solid #fcd34d;font-family:monospace;}
+.badge-vendor{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-weight:700;}
+.badge-risk{background:#fff5f5;color:#c53030;border:1px solid #fed7d7;font-weight:700;}
+.badge-pv{background:#fffbeb;color:#d97706;border:1px solid #fde68a;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;
+  align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:640px;
+  box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto;}
+.modal h3{margin-bottom:16px;color:var(--primary);font-size:1rem;}
+.form-group{margin-bottom:11px;}
+.form-group label{display:block;font-size:.77rem;font-weight:600;margin-bottom:3px;color:#4a5568;}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:.83rem;transition:border-color .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.dist-info-box{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;
+  padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.dist-info-box.warn{background:#fffbeb;border-color:#fcd34d;}
+.inner-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.inner-tab{padding:6px 14px;border:none;border-radius:7px;font-size:.8rem;font-weight:600;
+  cursor:pointer;background:#edf2f7;color:#718096;transition:all .15s;}
+.inner-tab.active{background:var(--accent);color:#fff;}
+.search-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.search-bar input{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:.83rem;flex:1;min-width:160px;}
+.search-bar select{padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.83rem;}
+.search-bar input:focus,.search-bar select:focus{outline:none;border-color:var(--accent);}
+.vendor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.vendor-card{background:var(--card);border-radius:12px;padding:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:5px solid var(--border);transition:all .2s;}
+.vendor-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px);}
+.vendor-card.status-ok{border-left-color:var(--success);}
+.vendor-card.status-warn{border-left-color:var(--warning);}
+.vendor-card.status-danger{border-left-color:var(--danger);}
+.vendor-card h3{font-size:.9rem;font-weight:700;margin-bottom:3px;color:var(--primary);}
+.vendor-card .vc-sub{font-size:.72rem;color:#718096;margin-bottom:8px;}
+.vendor-card .vc-row{display:flex;justify-content:space-between;align-items:center;font-size:.75rem;margin-top:4px;}
+.dday-ok{color:var(--success);font-weight:700;}
+.dday-warn{color:var(--warning);font-weight:700;}
+.dday-danger{color:var(--danger);font-weight:700;}
+#alertBanner{background:#fff3cd;border-left:5px solid var(--warning);padding:9px 22px;
+  font-size:.83rem;color:#7b5800;display:none;align-items:center;gap:10px;}
+#alertBanner.show{display:flex;}
+.log-list{list-style:none;max-height:420px;overflow-y:auto;}
+.log-list li{padding:8px 12px;border-left:3px solid var(--accent);margin-bottom:7px;
+  background:#f7f9ff;border-radius:0 8px 8px 0;font-size:.8rem;}
+.log-list li .log-time{font-size:.7rem;color:#a0aec0;margin-bottom:2px;}
+#toast{position:fixed;bottom:22px;right:22px;background:#2d3748;color:#fff;
+  padding:11px 18px;border-radius:10px;font-size:.83rem;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);transform:translateY(80px);
+  opacity:0;transition:all .3s;z-index:9999;}
+#toast.show{transform:translateY(0);opacity:1;}
+.prog-bar{background:#e2e8f0;border-radius:10px;height:5px;overflow:hidden;margin-top:3px;}
+.prog-fill{height:100%;border-radius:10px;background:var(--success);transition:width .3s;}
+.prog-fill.warn{background:var(--warning);}
+.prog-fill.danger{background:var(--danger);}
+.part-group-header td{background:#f0f4f8!important;font-weight:700;color:var(--primary);
+  font-size:.82rem;border-top:2px solid var(--border);}
+.part-group-header td:first-child{border-left:4px solid var(--accent);}
+.vendor-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+  border-radius:20px;font-size:.76rem;font-weight:700;margin:2px;}
+.vendor-chip.dist-done{background:#f0fff4;color:var(--success);border:1.5px solid #c6f6d5;}
+.vendor-chip.dist-pending{background:#fff5f5;color:var(--danger);border:1.5px solid #fed7d7;cursor:pointer;}
+.vendor-chip.dist-pending:hover{background:#fed7d7;}
+.qty-cell{font-weight:700;font-size:.92rem;}
+.qty-ok{color:var(--success);}
+.qty-partial{color:var(--warning);}
+.qty-zero{color:var(--danger);}
+.part-select-panel{background:#f8faff;border:1.5px solid var(--border);border-radius:10px;
+  max-height:280px;overflow-y:auto;margin:8px 0;}
+.part-select-item{display:flex;align-items:center;gap:8px;padding:7px 12px;
+  border-bottom:1px solid var(--border);font-size:.8rem;cursor:pointer;transition:background .1s;}
+.part-select-item:last-child{border-bottom:none;}
+.part-select-item:hover{background:#eff6ff;}
+.part-select-item.selected{background:#eff6ff;}
+.part-select-item input{cursor:pointer;accent-color:var(--accent);}
+/* 편집 힌트 */
+.edit-hint{font-size:.68rem;color:#a0aec0;margin-bottom:6px;}
+@media(max-width:700px){aside{display:none;}.form-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ HE ICCU <span>— 협력업체 통합 관리 시스템</span></h1>
+  <div id="clock"></div>
+</header>
+<div id="alertBanner">⚠️ <strong id="alertMsg"></strong></div>
+
+<div class="layout">
+<aside>
+  <div class="nav-section">메인</div>
+  <div class="nav-item active" onclick="navigate('dashboard',this)">🏠 대시보드
+    <span class="nav-badge" id="nb-dash" style="display:none"></span></div>
+  <div class="nav-section">부품</div>
+  <div class="nav-item" onclick="navigate('parts',this)">🔩 부품 현황</div>
+  <div class="nav-item" onclick="navigate('partmgr',this)">⚙️ 부품 관리</div>
+  <div class="nav-section">문서 / 변경</div>
+  <div class="nav-item" onclick="navigate('eco',this)">🔄 설계변경(ECO) 관리
+    <span class="nav-badge" id="nb-eco" style="display:none"></span></div>
+  <div class="nav-item" onclick="navigate('bom',this)">📄 BOM 관리</div>
+  <div class="nav-item" onclick="navigate('drawing',this)">📐 도면 관리</div>
+  <div class="nav-section">업체 관리</div>
+  <div class="nav-item" onclick="navigate('delivery',this)">🚚 납기 / 입고</div>
+  <div class="nav-item" onclick="navigate('dimension',this)">📏 전치수 관리</div>
+  <div class="nav-item" onclick="navigate('schedule',this)">📅 대응 일정</div>
+  <div class="nav-item" onclick="navigate('vendors',this)">🏭 업체 정보</div>
+  <div class="nav-section">기록</div>
+  <div class="nav-item" onclick="navigate('log',this)">📋 활동 로그</div>
+</aside>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="page-title">🏠 HE ICCU 종합 현황</div>
+  <div class="stats" id="dashStats"></div>
+  <div class="card">
+    <div class="card-header"><h2>🚨 즉시 조치 필요 항목</h2></div>
+    <div id="urgentList"></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>🏭 협력업체 현황</h2></div>
+    <div class="vendor-grid" id="vendorGrid"></div>
+  </div>
+</div>
+
+<!-- ECO MANAGEMENT -->
+<div id="page-eco" class="page">
+  <div class="page-title">🔄 설계변경(ECO) 관리
+    <span style="font-size:.78rem;color:#718096;font-weight:400">— 품번별 설계변경 이력 통합 관리</span>
+  </div>
+  <div class="stats" id="ecoStats"></div>
+  <div class="search-bar">
+    <input id="ecoSearch" placeholder="🔍 품번/품명/업체/ECO번호/내용 검색..." oninput="renderEcoPage()"/>
+    <select id="ecoVendorF" onchange="renderEcoPage()"><option value="ALL">전체 업체</option></select>
+    <select id="ecoTypeF" onchange="renderEcoPage()">
+      <option value="ALL">전체 유형</option>
+      <option value="도면변경">도면변경</option><option value="BOM변경">BOM변경</option>
+      <option value="사양변경">사양변경</option><option value="자재변경">자재변경</option>
+      <option value="공정변경">공정변경</option><option value="기타">기타</option>
+    </select>
+    <select id="ecoStatusF" onchange="renderEcoPage()">
+      <option value="ALL">전체 상태</option>
+      <option value="open">🔴 진행중</option>
+      <option value="done">✅ 완료</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>📋 설계변경 이력 목록</h2>
+      <button class="btn btn-primary" onclick="openEcoModal()">+ 설계변경 등록</button>
+    </div>
+    <div class="table-wrap">
+      <table id="ecoTable"><thead><tr>
+        <th>ECO 번호</th><th>품번</th><th>품명</th>
+        <th>업체<button class="col-filter-btn" onclick="openColFilter(event,'ecoTable',3)">▼</button></th>
+        <th>변경 유형<button class="col-filter-btn" onclick="openColFilter(event,'ecoTable',4)">▼</button></th>
+        <th>변경 일자</th><th>변경 내용</th><th>영향 범위</th>
+        <th>상태<button class="col-filter-btn" onclick="openColFilter(event,'ecoTable',8)">▼</button></th>
+        <th>담당자</th><th>완료일</th><th>액션</th>
+      </tr></thead>
+      <tbody id="ecoBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>📊 부품별 ECO 이력 (설계변경 多 순)</h2></div>
+    <div id="ecoByPartList"><div style="color:#a0aec0;font-size:.85rem;padding:12px">등록된 설계변경이 없습니다.</div></div>
+  </div>
+</div>
+
+<!-- PART MANAGER -->
+<div id="page-partmgr" class="page">
+  <div class="page-title">⚙️ 부품 관리</div>
+  <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:#1d4ed8;">
+    💡 <strong>기본 내장 부품(65개)</strong>은 삭제 불가합니다. 추가한 부품만 삭제 가능합니다.<br>
+    ✏️ 부품 현황 탭에서 모든 필드를 <strong>직접 클릭하여 수정</strong>할 수 있습니다.
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>➕ 부품 단건 등록</h2></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+      <div class="form-group"><label>품번 *</label><input id="pm_pn" placeholder="예) 9191090999"/></div>
+      <div class="form-group"><label>품명 *</label><input id="pm_name" placeholder="예) NEW BRACKET ASSY"/></div>
+      <div class="form-group"><label>구분 *</label>
+        <select id="pm_type">
+          <option value="다이캐스팅">다이캐스팅</option><option value="프레스">프레스</option>
+          <option value="사출">사출</option><option value="PCBA">PCBA</option>
+          <option value="PCB">PCB</option><option value="부자재">부자재</option>
+          <option value="FFC 케이블">FFC 케이블</option><option value="와이어하네스">와이어하네스</option>
+          <option value="스크류">스크류</option><option value="PCE">PCE</option><option value="기타">기타</option>
+        </select></div>
+      <div class="form-group"><label>선정업체 *</label><input id="pm_vendor" placeholder="예) YSI AUTOMOTIVE"/></div>
+      <div class="form-group"><label>생산지 *</label>
+        <select id="pm_country">
+          <option value="한국">🇰🇷 한국</option><option value="인도">🇮🇳 인도</option>
+          <option value="베트남">🇻🇳 베트남</option><option value="일본">🇯🇵 일본</option>
+        </select></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="addExtraPart()">➕ 부품 등록</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>📦 추가 등록된 부품 <span id="extraPartCount" class="badge badge-info"></span></h2>
+      <button class="btn btn-xs btn-danger" onclick="clearAllExtraParts()">전체 삭제</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>품번</th><th>품명</th><th>구분</th><th>선정업체</th><th>생산지</th><th>등록일시</th><th>액션</th>
+      </tr></thead><tbody id="extraPartBody"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>📊 전체 부품 현황 요약</h2></div>
+    <div id="partMgrSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;"></div>
+  </div>
+</div>
+
+<!-- PARTS -->
+<div id="page-parts" class="page">
+  <div class="page-title">🔩 HE ICCU 부품 현황 <span style="font-size:.8rem;color:#718096;font-weight:400">— 65종</span></div>
+  <div style="background:#f0fff4;border:1px solid #c6f6d5;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:.78rem;color:#276749;">
+    ✏️ <strong>각 셀을 클릭하면 바로 수정</strong>할 수 있습니다. 수정 후 Enter 또는 클릭 외부 영역 클릭으로 저장됩니다.
+  </div>
+  <div class="search-bar">
+    <input id="partSearch" placeholder="🔍 품번/품명/업체 검색..." oninput="renderParts()"/>
+    <select id="partVendorF" onchange="renderParts()"><option value="ALL">전체 업체</option></select>
+    <select id="partTypeF" onchange="renderParts()"><option value="ALL">전체 구분</option></select>
+    <select id="partRiskF" onchange="renderParts()">
+      <option value="ALL">전체 상태</option>
+      <option value="RISK">🚨 문제 가능 부품</option>
+      <option value="PV_ECO">🔄 PV 설변 부품</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>부품 목록 <span id="partCount" style="font-size:.76rem;color:#718096;font-weight:400"></span></h2>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-xs btn-ghost" onclick="resetPartsOverride()">↩️ 수정 전체 초기화</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="partsTable"><thead><tr>
+        <th>품번</th>
+        <th>품명 ✏️</th>
+        <th>제조업체 ✏️</th>
+        <th>구분<button class="col-filter-btn" onclick="openColFilter(event,'partsTable',3)">▼</button></th>
+        <th>인도조건 ✏️</th>
+        <th>생산지 ✏️</th>
+        <th>P1 입고일 ✏️</th>
+        <th>치수만족 ✏️<button class="col-filter-btn" onclick="openColFilter(event,'partsTable',7)">▼</button></th>
+        <th>PV설변 ✏️<button class="col-filter-btn" onclick="openColFilter(event,'partsTable',8)">▼</button></th>
+        <th>요약 ✏️<button class="col-filter-btn" onclick="openColFilter(event,'partsTable',9)">▼</button></th>
+        <th>비고 ✏️</th>
+        <th>ECO 이력</th>
+        <th>입고현황</th>
+      </tr></thead>
+      <tbody id="partsBody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- BOM -->
+<div id="page-bom" class="page">
+  <div class="page-title">📄 BOM 관리 <span style="font-size:.78rem;color:#718096;font-weight:400">— THREEB ELECTRONICS 배포</span></div>
+  <div class="card">
+    <div class="card-header"><h2>HE ICCU — BOM 변경 이력</h2>
+      <button class="btn btn-primary" onclick="openBomModal()">+ BOM 변경 등록</button></div>
+    <div class="table-wrap">
+      <table id="bomTable"><thead><tr>
+        <th>BOM Rev</th><th>변경일</th><th>변경내용</th><th>변경사유</th><th>담당자</th>
+        <th>THREEB 배포</th><th>배포일시</th><th>상태</th><th>액션</th>
+      </tr></thead><tbody id="bomBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWING -->
+<div id="page-drawing" class="page">
+  <div class="page-title">📐 도면 관리</div>
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="switchDrawTab('mech',this)">🔩 기구물 도면</button>
+    <button class="inner-tab" onclick="switchDrawTab('pcba',this)">🔌 PCBA 도면</button>
+    <button class="inner-tab" onclick="switchDrawTab('pcb',this)">🟢 PCB 거버데이터</button>
+  </div>
+  <div id="draw-mech" class="draw-sec">
+    <div class="bulk-panel">
+      <h3>⚡ 기구물 도면 일괄 ECO 등록</h3>
+      <div class="bulk-selected-bar">
+        선택된 품번: <strong id="bulkSelectedCount">0</strong>개
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-xs btn-ghost" onclick="bulkSelectAll()">전체선택</button>
+          <button class="btn btn-xs btn-ghost" onclick="bulkSelectNone()">전체해제</button>
+          <button class="btn btn-xs btn-ghost" onclick="bulkSelectUndist()">🚨 미배포만</button>
+        </div>
+      </div>
+      <div class="bulk-form">
+        <div class="form-group"><label>ECO 번호 *</label><input id="bulk_eco" placeholder="예) ECO-HE-001"/></div>
+        <div class="form-group"><label>변경일 *</label><input id="bulk_date" type="date"/></div>
+        <div class="form-group"><label>담당자 *</label><input id="bulk_owner"/></div>
+        <div class="form-group"><label>배포 여부</label>
+          <select id="bulk_dist"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>변경 내용 *</label><textarea id="bulk_change" rows="2"></textarea>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-success" onclick="executeBulkEco()">⚡ 선택 품번 일괄 등록</button>
+        <span style="font-size:.76rem;color:#718096;margin-left:8px" id="bulkReadyMsg">품번을 선택하고 정보를 입력하세요</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div><h2>🔩 기구물 도면 (2D/3D)</h2></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <select id="mechVendorF" onchange="renderMech()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.8rem"><option value="ALL">전체 업체</option></select>
+          <select id="mechDistF" onchange="renderMech()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.8rem">
+            <option value="ALL">전체 상태</option><option value="N">🚨 미배포</option><option value="Y">✅ 배포완료</option><option value="NONE">📭 도면없음</option>
+          </select>
+          <button class="btn btn-primary" onclick="openDrawModal('mech')">+ 단건 등록</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="mechTable"><thead><tr>
+          <th class="check-th"><input type="checkbox" id="mechCheckAll" onchange="mechCheckAllToggle(this)" style="cursor:pointer;accent-color:var(--accent)"/></th>
+          <th>품번</th><th>품명</th><th>담당업체</th>
+          <th>최신 ECO</th><th>변경일</th><th>변경내용</th><th>담당자</th>
+          <th>배포 상태</th><th>액션</th>
+        </tr></thead><tbody id="mechBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div id="draw-pcba" class="draw-sec" style="display:none">
+    <div class="card">
+      <div class="card-header"><h2>🔌 PCBA 도면 — THREEB ELECTRONICS 전용</h2>
+        <button class="btn btn-primary" onclick="openDrawModal('pcba')">+ ECO 등록</button></div>
+      <div class="table-wrap">
+        <table id="pcbaTable"><thead><tr>
+          <th class="check-th"><input type="checkbox" id="pcbaCheckAll" onchange="pcbaCheckAllToggle(this)" style="cursor:pointer;accent-color:var(--accent)"/></th>
+          <th>품번</th><th>품명</th><th>담당업체</th>
+          <th>최신 ECO</th><th>변경일</th><th>변경내용</th><th>담당자</th>
+          <th>THREEB 배포</th><th>배포일시</th><th>상태</th><th>액션</th>
+        </tr></thead><tbody id="pcbaBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div id="draw-pcb" class="draw-sec" style="display:none">
+    <div class="card">
+      <div class="card-header"><h2>🟢 PCB 거버데이터 — THREEB / (주)신협전자</h2>
+        <button class="btn btn-primary" onclick="openDrawModal('pcb')">+ ECO 등록</button></div>
+      <div class="table-wrap">
+        <table id="pcbTable"><thead><tr>
+          <th class="check-th"><input type="checkbox" id="pcbCheckAll" onchange="pcbCheckAllToggle(this)" style="cursor:pointer;accent-color:var(--accent)"/></th>
+          <th>품번</th><th>품명</th><th>담당업체</th>
+          <th>최신 ECO</th><th>변경일</th><th>변경내용</th><th>담당자</th>
+          <th>THREEB</th><th>신협전자</th><th>상태</th><th>액션</th>
+        </tr></thead><tbody id="pcbBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELIVERY -->
+<div id="page-delivery" class="page">
+  <div class="page-title">🚚 납기 / 입고 관리</div>
+  <div class="search-bar">
+    <input id="dvSearch" placeholder="🔍 품번/품명/업체 검색..." oninput="renderDelivery()"/>
+    <select id="dvStatusF" onchange="renderDelivery()">
+      <option value="ALL">전체 상태</option><option value="pending">미입고</option>
+      <option value="partial">부분입고</option><option value="done">완료</option><option value="delay">지연</option>
+    </select>
+  </div>
+  <div class="bulk-panel">
+    <h3>⚡ 납기 / 입고 일괄 등록</h3>
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <input id="dvBulkSearch" placeholder="🔍 품번/품명/업체 검색..." oninput="renderDvBulkPartList()"
+        style="padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:.8rem;flex:1;min-width:160px"/>
+    </div>
+    <div class="bulk-selected-bar">
+      선택된 품번: <strong id="dvBulkCount">0</strong>개
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-xs btn-ghost" onclick="dvBulkSelectAll()">전체선택</button>
+        <button class="btn btn-xs btn-ghost" onclick="dvBulkSelectNone()">전체해제</button>
+        <button class="btn btn-xs btn-ghost" onclick="dvBulkSelectUnreg()">📭 미등록만</button>
+      </div>
+    </div>
+    <div class="part-select-panel" id="dvBulkPartList"></div>
+    <div class="bulk-form" style="margin-top:12px">
+      <div class="form-group"><label>발주일</label><input id="dv_bulk_order" type="date"/></div>
+      <div class="form-group"><label>발주수량 *</label><input id="dv_bulk_orderQty" type="number" min="1"/></div>
+      <div class="form-group"><label>목표입고일 *</label><input id="dv_bulk_target" type="date"/></div>
+      <div class="form-group"><label>입고상태</label>
+        <select id="dv_bulk_status">
+          <option value="pending">⏳ 미입고</option><option value="partial">📦 부분입고</option>
+          <option value="done">✅ 입고완료</option><option value="delay">🚨 지연</option>
+        </select></div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn btn-success" onclick="executeDvBulk()">⚡ 선택 품번 일괄 등록</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>품번별 발주 / 입고 현황</h2>
+      <button class="btn btn-primary" onclick="openDeliveryModal()">+ 단건 등록</button></div>
+    <div class="table-wrap">
+      <table id="dvTable"><thead><tr>
+        <th>품번</th><th>품명</th><th>업체</th>
+        <th>발주일</th><th>발주수량</th><th>목표입고일</th><th>D-Day</th>
+        <th>입고수량</th><th>미입고</th><th>입고율</th>
+        <th>상태</th><th>특이사항</th><th>액션</th>
+      </tr></thead><tbody id="deliveryBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- DIMENSION -->
+<div id="page-dimension" class="page">
+  <div class="page-title">📏 전치수 관리</div>
+  <div class="search-bar">
+    <input id="dmSearch" placeholder="🔍 품번/품명/업체 검색..." oninput="renderDimension()"/>
+    <select id="dmResultF" onchange="renderDimension()">
+      <option value="ALL">전체 결과</option><option value="pending">미접수</option>
+      <option value="checking">검사중</option><option value="pass">만족</option><option value="fail">불만족</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>품번별 전치수 현황</h2>
+      <button class="btn btn-primary" onclick="openDimModal()">+ 전치수 결과 등록</button></div>
+    <div class="table-wrap">
+      <table id="dmTable"><thead><tr>
+        <th>품번</th><th>품명</th><th>업체</th>
+        <th>기준 ECO</th><th>검사일</th><th>결과</th>
+        <th>불만족 항목</th><th>조치</th><th>재검사일</th><th>액션</th>
+      </tr></thead><tbody id="dimensionBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div id="page-schedule" class="page">
+  <div class="page-title">📅 대응 일정</div>
+  <div class="search-bar">
+    <input id="scSearch" placeholder="🔍 품번/품명/업체 검색..." oninput="renderSchedule()"/>
+    <select id="scStageF" onchange="renderSchedule()">
+      <option value="ALL">전체 단계</option><option value="도면검토">도면검토</option>
+      <option value="견적">견적중</option><option value="발주">발주완료</option>
+      <option value="제작중">제작중</option><option value="검사중">검사중</option><option value="납품완료">납품완료</option>
+    </select>
+  </div>
+  <div class="bulk-panel">
+    <h3>⚡ 대응 일정 일괄 등록</h3>
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <input id="scBulkSearch" placeholder="🔍 품번/품명/업체 검색..." oninput="renderScBulkPartList()"
+        style="padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:.8rem;flex:1;min-width:160px"/>
+    </div>
+    <div class="bulk-selected-bar">
+      선택된 품번: <strong id="scBulkCount">0</strong>개
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-xs btn-ghost" onclick="scBulkSelectAll()">전체선택</button>
+        <button class="btn btn-xs btn-ghost" onclick="scBulkSelectNone()">전체해제</button>
+        <button class="btn btn-xs btn-ghost" onclick="scBulkSelectUnreg()">📭 미등록만</button>
+      </div>
+    </div>
+    <div class="part-select-panel" id="scBulkPartList"></div>
+    <div class="bulk-form" style="margin-top:12px">
+      <div class="form-group"><label>진행 단계 *</label>
+        <select id="sc_bulk_stage">
+          <option value="도면검토">📋 도면검토</option><option value="견적">💰 견적중</option>
+          <option value="발주">📋 발주완료</option><option value="제작중">⚙️ 제작중</option>
+          <option value="검사중">🔍 검사중</option><option value="납품완료">✅ 납품완료</option>
+        </select></div>
+      <div class="form-group"><label>대응 가능일 *</label><input id="sc_bulk_date" type="date"/></div>
+      <div class="form-group"><label>샘플 수량</label><input id="sc_bulk_qty"/></div>
+      <div class="form-group"><label>담당자</label><input id="sc_bulk_owner"/></div>
+    </div>
+    <div class="form-group" style="margin-top:8px">
+      <label>공통 코멘트</label><textarea id="sc_bulk_comment" rows="2"></textarea>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn btn-success" onclick="executeScBulk()">⚡ 선택 품번 일괄 등록</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>품번별 대응 일정 현황</h2>
+      <button class="btn btn-primary" onclick="openSchedModal()">+ 단건 등록</button></div>
+    <div class="table-wrap">
+      <table id="scTable"><thead><tr>
+        <th>품번</th><th>품명</th><th>업체</th>
+        <th>진행 단계</th><th>대응 가능일</th><th>D-Day</th>
+        <th>샘플수량</th><th>코멘트</th><th>최종수정</th><th>액션</th>
+      </tr></thead><tbody id="scheduleBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- VENDORS -->
+<div id="page-vendors" class="page">
+  <div class="page-title">🏭 업체 정보</div>
+  <div class="search-bar">
+    <input id="vendorSearch" placeholder="🔍 업체명 검색..." oninput="renderVendorInfo()"/>
+  </div>
+  <div class="vendor-grid" id="vendorInfoGrid"></div>
+</div>
+
+<!-- LOG -->
+<div id="page-log" class="page">
+  <div class="page-title">📋 활동 로그</div>
+  <div class="card">
+    <div class="card-header"><h2>전체 활동 기록</h2>
+      <button class="btn btn-sm btn-danger" onclick="clearLog()">초기화</button></div>
+    <ul class="log-list" id="logList"></ul>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- MODALS -->
+<!-- BOM -->
+<div class="modal-overlay" id="modal-bom"><div class="modal">
+  <h3>📄 BOM 변경 등록 — HE ICCU</h3>
+  <div class="form-row">
+    <div class="form-group"><label>BOM Rev *</label><input id="b_rev" placeholder="예) Rev.B"/></div>
+    <div class="form-group"><label>변경일 *</label><input id="b_date" type="date"/></div>
+  </div>
+  <div class="form-group"><label>변경 내용 *</label><textarea id="b_change" rows="2"></textarea></div>
+  <div class="form-group"><label>변경 사유</label><input id="b_reason"/></div>
+  <div class="form-group"><label>담당자 *</label><input id="b_owner"/></div>
+  <div class="form-group"><label>THREEB 배포</label>
+    <select id="b_dist"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('bom')">취소</button>
+    <button class="btn btn-primary" onclick="saveBom()">등록</button>
+  </div>
+</div></div>
+
+<!-- ECO 관리 모달 -->
+<div class="modal-overlay" id="modal-eco"><div class="modal">
+  <h3 id="ecoModalTitle">🔄 설계변경(ECO) 등록</h3>
+  <input type="hidden" id="eco_editId"/>
+  <div class="form-row">
+    <div class="form-group"><label>ECO 번호 *</label>
+      <input id="eco_num" placeholder="예) ECO-HE-001"/></div>
+    <div class="form-group"><label>변경 유형 *</label>
+      <select id="eco_type">
+        <option value="도면변경">📐 도면변경</option>
+        <option value="BOM변경">📄 BOM변경</option>
+        <option value="사양변경">🔧 사양변경</option>
+        <option value="자재변경">📦 자재변경</option>
+        <option value="공정변경">⚙️ 공정변경</option>
+        <option value="기타">🔹 기타</option>
+      </select></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>품번 선택 *</label>
+      <select id="eco_pn" onchange="autoFillEcoPart()">
+        <option value="">-- 선택 --</option>
+      </select></div>
+    <div class="form-group"><label>업체</label>
+      <input id="eco_vendor" readonly style="background:#f7fafc"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>변경 일자 *</label><input id="eco_date" type="date"/></div>
+    <div class="form-group"><label>담당자 *</label><input id="eco_owner" placeholder="예) 홍길동"/></div>
+  </div>
+  <div class="form-group"><label>변경 내용 * <span style="font-size:.72rem;color:#718096">(구체적으로 기재)</span></label>
+    <textarea id="eco_change" rows="3" placeholder="예) 치수 변경 — 마운팅홀 위치 X+2.5mm 변경"></textarea></div>
+  <div class="form-group"><label>변경 사유</label>
+    <input id="eco_reason" placeholder="예) 열 간섭 문제로 인한 구조 보강"/></div>
+  <div class="form-group"><label>영향 범위</label>
+    <input id="eco_impact" placeholder="예) UPPER COVER, LOWER COVER 동시 변경 필요"/></div>
+  <div class="form-row">
+    <div class="form-group"><label>진행 상태</label>
+      <select id="eco_status">
+        <option value="open">🔴 진행중</option>
+        <option value="done">✅ 완료</option>
+      </select></div>
+    <div class="form-group"><label>완료 예정일 / 완료일</label>
+      <input id="eco_duedate" type="date"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('eco')">취소</button>
+    <button class="btn btn-primary" onclick="saveEco()">저장</button>
+  </div>
+</div></div>
+
+<!-- Drawing 단건 -->
+<div class="modal-overlay" id="modal-draw"><div class="modal">
+  <h3 id="drawMTitle">📐 도면 ECO 단건 등록</h3>
+  <input type="hidden" id="dw_type"/>
+  <div class="form-row">
+    <div class="form-group"><label>품번 선택 *</label>
+      <select id="dw_pn" onchange="onDrawPnChange()"><option value="">-- 선택 --</option></select></div>
+    <div class="form-group"><label>담당업체</label><input id="dw_vendor" readonly style="background:#f7fafc"/></div>
+  </div>
+  <div id="dw_vendor_info" style="display:none">
+    <div class="dist-info-box warn"><span style="font-size:1.1rem">🏭</span>
+      <div><div style="font-size:.74rem;color:#718096">배포 대상 업체</div>
+        <div style="font-size:.92rem;font-weight:700;color:var(--primary)" id="dw_vendor_display">-</div></div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>ECO 번호 *</label><input id="dw_eco" placeholder="예) ECO-HE-001"/></div>
+    <div class="form-group"><label>변경일 *</label><input id="dw_date" type="date"/></div>
+  </div>
+  <div class="form-group"><label>변경 내용 *</label><textarea id="dw_change" rows="2"></textarea></div>
+  <div class="form-group"><label>담당자 *</label><input id="dw_owner"/></div>
+  <div id="dw_mech_dist" style="display:none">
+    <div class="form-group"><label id="dw_mech_dist_label">담당업체 배포 여부</label>
+      <select id="dw_dist_mech"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+  </div>
+  <div id="dw_fixed_dist" style="display:none">
+    <div class="form-group"><label>THREEB 배포</label>
+      <select id="dw_dist1"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+  </div>
+  <div id="dw_pcb_dist2" style="display:none">
+    <div class="form-group"><label>신협전자 배포</label>
+      <select id="dw_dist2"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('draw')">취소</button>
+    <button class="btn btn-primary" onclick="saveDrawing()">등록</button>
+  </div>
+</div></div>
+
+<!-- Drawing 수정 -->
+<div class="modal-overlay" id="modal-draw-edit"><div class="modal">
+  <h3 id="drawEditTitle">📐 도면 ECO 수정</h3>
+  <input type="hidden" id="de_id"/><input type="hidden" id="de_type"/>
+  <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:.78rem;color:#92400e;">
+    ⚠️ 수정 시 기존 ECO 기록이 변경됩니다.
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>품번</label><input id="de_pn" readonly style="background:#f7fafc"/></div>
+    <div class="form-group"><label>담당업체</label><input id="de_vendor" readonly style="background:#f7fafc"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>ECO 번호 *</label><input id="de_eco"/></div>
+    <div class="form-group"><label>변경일 *</label><input id="de_date" type="date"/></div>
+  </div>
+  <div class="form-group"><label>변경 내용 *</label><textarea id="de_change" rows="2"></textarea></div>
+  <div class="form-group"><label>담당자 *</label><input id="de_owner"/></div>
+  <div id="de_mech_wrap" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>배포 여부</label>
+        <select id="de_distVendor"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+      <div class="form-group"><label>배포 일시</label><input id="de_distVendorAt"/></div>
+    </div>
+  </div>
+  <div id="de_pcba_wrap" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>THREEB 배포</label>
+        <select id="de_dist1"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+      <div class="form-group"><label>THREEB 배포 일시</label><input id="de_dist1At"/></div>
+    </div>
+  </div>
+  <div id="de_pcb_wrap" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>THREEB 배포</label>
+        <select id="de_dist1_pcb"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+      <div class="form-group"><label>THREEB 배포 일시</label><input id="de_dist1At_pcb"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>신협전자 배포</label>
+        <select id="de_dist2"><option value="N">❌ 미배포</option><option value="Y">✅ 배포완료</option></select></div>
+      <div class="form-group"><label>신협전자 배포 일시</label><input id="de_dist2At"/></div>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('draw-edit')">취소</button>
+    <button class="btn btn-warning" onclick="saveDrawEdit()" style="color:#fff">💾 수정 저장</button>
+  </div>
+</div></div>
+
+<!-- Delivery -->
+<div class="modal-overlay" id="modal-delivery"><div class="modal">
+  <h3>🚚 납기 / 입고 정보</h3>
+  <input type="hidden" id="dv_editId"/>
+  <div class="form-row">
+    <div class="form-group"><label>품번 *</label>
+      <select id="dv_pn" onchange="autoFillDv()"><option value="">-- 선택 --</option></select></div>
+    <div class="form-group"><label>업체</label><input id="dv_vendor" readonly style="background:#f7fafc"/></div>
+  </div>
+  <div class="form-group"><label>품명</label><input id="dv_pname" readonly style="background:#f7fafc"/></div>
+  <div class="form-row">
+    <div class="form-group"><label>발주일</label><input id="dv_order" type="date"/></div>
+    <div class="form-group"><label>발주수량 *</label><input id="dv_orderQty" type="number" min="0"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>목표입고일 *</label><input id="dv_target" type="date"/></div>
+    <div class="form-group"><label>입고수량</label><input id="dv_inQty" type="number" min="0"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>실제입고일</label><input id="dv_actual" type="date"/></div>
+    <div class="form-group"><label>입고상태 *</label>
+      <select id="dv_status">
+        <option value="pending">⏳ 미입고</option><option value="partial">📦 부분입고</option>
+        <option value="done">✅ 입고완료</option><option value="delay">🚨 지연</option>
+      </select></div>
+  </div>
+  <div class="form-group"><label>특이사항</label><textarea id="dv_note" rows="2"></textarea></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('delivery')">취소</button>
+    <button class="btn btn-primary" onclick="saveDelivery()">저장</button>
+  </div>
+</div></div>
+
+<!-- Dimension -->
+<div class="modal-overlay" id="modal-dimension"><div class="modal">
+  <h3>📏 전치수 결과 등록</h3>
+  <input type="hidden" id="dm_editId"/>
+  <div class="form-row">
+    <div class="form-group"><label>품번 *</label>
+      <select id="dm_pn" onchange="autoFillDm()"><option value="">-- 선택 --</option></select></div>
+    <div class="form-group"><label>업체</label><input id="dm_vendor" readonly style="background:#f7fafc"/></div>
+  </div>
+  <div class="form-group"><label>품명</label><input id="dm_pname" readonly style="background:#f7fafc"/></div>
+  <div class="form-row">
+    <div class="form-group"><label>기준 ECO *</label><input id="dm_eco" placeholder="예) ECO-HE-001"/></div>
+    <div class="form-group"><label>검사일 *</label><input id="dm_date" type="date"/></div>
+  </div>
+  <div class="form-group"><label>전치수 결과 *</label>
+    <select id="dm_result">
+      <option value="pending">⏳ 미접수</option><option value="checking">🔄 검사중</option>
+      <option value="pass">✅ 만족</option><option value="fail">❌ 불만족</option>
+    </select></div>
+  <div class="form-group"><label>불만족 항목</label><input id="dm_fail"/></div>
+  <div class="form-row">
+    <div class="form-group"><label>조치</label>
+      <select id="dm_action">
+        <option value="">-- 선택 --</option>
+        <option value="rework">🔧 재작업</option><option value="reorder">🔄 재발주</option>
+        <option value="special">⚠️ 특채</option><option value="none">해당없음</option>
+      </select></div>
+    <div class="form-group"><label>재검사 예정일</label><input id="dm_recheck" type="date"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('dimension')">취소</button>
+    <button class="btn btn-primary" onclick="saveDimension()">저장</button>
+  </div>
+</div></div>
+
+<!-- Schedule -->
+<div class="modal-overlay" id="modal-schedule"><div class="modal">
+  <h3>📅 대응 일정 등록</h3>
+  <input type="hidden" id="sc_editId"/>
+  <div class="form-row">
+    <div class="form-group"><label>품번 *</label>
+      <select id="sc_pn" onchange="autoFillSc()"><option value="">-- 선택 --</option></select></div>
+    <div class="form-group"><label>업체</label><input id="sc_vendor" readonly style="background:#f7fafc"/></div>
+  </div>
+  <div class="form-group"><label>품명</label><input id="sc_pname" readonly style="background:#f7fafc"/></div>
+  <div class="form-row">
+    <div class="form-group"><label>진행 단계 *</label>
+      <select id="sc_stage">
+        <option value="도면검토">📋 도면검토</option><option value="견적">💰 견적중</option>
+        <option value="발주">📋 발주완료</option><option value="제작중">⚙️ 제작중</option>
+        <option value="검사중">🔍 검사중</option><option value="납품완료">✅ 납품완료</option>
+      </select></div>
+    <div class="form-group"><label>대응 가능일 *</label><input id="sc_date" type="date"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>샘플 수량</label><input id="sc_qty"/></div>
+    <div class="form-group"><label>담당자</label><input id="sc_owner"/></div>
+  </div>
+  <div class="form-group"><label>코멘트</label><textarea id="sc_comment" rows="2"></textarea></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('schedule')">취소</button>
+    <button class="btn btn-primary" onclick="saveSchedule()">저장</button>
+  </div>
+</div></div>
+
+<!-- Filter Dropdown -->
+<div id="filterDropdown" class="filter-dropdown">
+  <div class="filter-dropdown-header">
+    <span id="filterDropTitle">필터</span>
+    <div style="display:flex;gap:6px">
+      <button onclick="filterSelectAll()">전체선택</button>
+      <button onclick="filterSelectNone()">전체해제</button>
+    </div>
+  </div>
+  <div id="filterDropItems"></div>
+  <div style="padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end">
+    <button class="btn btn-xs btn-ghost" onclick="closeFilterDropdown()">취소</button>
+    <button class="btn btn-xs btn-primary" onclick="applyColFilter()">적용</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// HE ICCU 부품 마스터 데이터 (65종)
+// ════════════════════════════════════════
+const BASE_PARTS = [
+  {pn:'9191090001',name:'HOUSING ASSY',vendor:'서진오토',type:'다이캐스팅',incoterms:'CIF',origin:'베트남',p1_in:'2026-03-23',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'Wating',summary:'',note:'분납 일정 위험'},
+  {pn:'9191090140',name:'SHIELD WALL',vendor:'KHVATEC HANOI CO.,LTD',type:'다이캐스팅',incoterms:'직납',origin:'인도',p1_in:'2026-03-06',dim_ok:'ING',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090103',name:'LDC POWER BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191090102',name:'INPUT BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'O',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090185',name:'INPUT FILTER-NON V2L',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'O',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090100',name:'DC CAP BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'O',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090097',name:'OBC POWER BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'O',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090098',name:'SMPS BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090099',name:'OUTPUT EMC FILTER BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090101',name:'CONTROL BOARD ASSY',vendor:'THREEB ELECTRONICS',type:'PCBA',incoterms:'직납',origin:'인도',p1_in:'2026-04-04',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'',summary:'문제 가능',note:'품질 문제, 입고일 준수'},
+  {pn:'9191090046',name:'LDC_POWER_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-02-25',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090042',name:'OBC_INPUTFILTER_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-01-31',dim_ok:'',all_tool:'O',pv_eco:'O',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090036',name:'OBC_PFC_CAP_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-01-31',dim_ok:'',all_tool:'O',pv_eco:'O',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090040',name:'OBC_POWER_V2L_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-01-31',dim_ok:'',all_tool:'O',pv_eco:'O',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090038',name:'OBC_SMPS_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-01-31',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090044',name:'OBC_OUTPUT_FILTER_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-01-31',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090034',name:'CONTROL_BOARD_SINGLE',vendor:'(주)신협전자',type:'PCB',incoterms:'FOB',origin:'한국',p1_in:'2026-01-31',dim_ok:'',all_tool:'O',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090004',name:'UPPER COVER',vendor:'YSI AUTOMOTIVE',type:'프레스',incoterms:'직납',origin:'인도',p1_in:'2026-03-15',dim_ok:'X',all_tool:'O',pv_eco:'',pv_add:'checking Sasi',summary:'문제 가능',note:'치수 육성 필요'},
+  {pn:'9191090025',name:'LOWER COVER ASSY',vendor:'YSI AUTOMOTIVE',type:'프레스',incoterms:'직납',origin:'인도',p1_in:'2026-03-15',dim_ok:'X',all_tool:'O',pv_eco:'',pv_add:'checking Sasi',summary:'문제 가능',note:'치수 육성 필요'},
+  {pn:'9191090157',name:'SHIELD PLATE ASSY',vendor:'YSI AUTOMOTIVE',type:'프레스',incoterms:'직납',origin:'인도',p1_in:'2026-03-15',dim_ok:'X',all_tool:'X(금형 이관 중)',pv_eco:'',pv_add:'checking Sasi',summary:'문제 가능',note:'금형 이관 중'},
+  {pn:'9191090189',name:'SHIELD PLATE SUB ASSY',vendor:'YSI AUTOMOTIVE',type:'프레스',incoterms:'직납',origin:'인도',p1_in:'2026-03-15',dim_ok:'X',all_tool:'X(금형 이관 중)',pv_eco:'',pv_add:'checking Sasi',summary:'문제 가능',note:'금형 이관 중'},
+  {pn:'9191090130',name:'BUSBAR LDC POWER BOARD',vendor:'SANDHAR HANSUNG TECHNOLOGIES',type:'사출',incoterms:'직납',origin:'인도',p1_in:'2026-03-09',dim_ok:'X',all_tool:'',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090127',name:'BUSBAR INPUT BOARD',vendor:'SANDHAR HANSUNG TECHNOLOGIES',type:'사출',incoterms:'직납',origin:'인도',p1_in:'2026-03-09',dim_ok:'X',all_tool:'',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090135',name:'BUSBAR CAP BOARD',vendor:'SANDHAR HANSUNG TECHNOLOGIES',type:'사출',incoterms:'직납',origin:'인도',p1_in:'2026-03-09',dim_ok:'O',all_tool:'',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090129',name:'BUSBAR OBC POWER BOARD',vendor:'SANDHAR HANSUNG TECHNOLOGIES',type:'사출',incoterms:'직납',origin:'인도',p1_in:'2026-03-09',dim_ok:'O',all_tool:'',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090143',name:'INSULATION BUSHING',vendor:'SANDHAR HANSUNG TECHNOLOGIES',type:'사출',incoterms:'직납',origin:'인도',p1_in:'2026-03-09',dim_ok:'O',all_tool:'',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090134',name:'OUTPUT SUB BUSBAR',vendor:'SANDHAR HANSUNG TECHNOLOGIES',type:'프레스',incoterms:'직납',origin:'인도',p1_in:'2026-03-09',dim_ok:'O',all_tool:'',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090149',name:'GAP FILLER DAM',vendor:'NIFCO SOUTH INDIA MANUFACTURING',type:'사출',incoterms:'직납',origin:'인도',p1_in:'2026-03-31',dim_ok:'ING',all_tool:'',pv_eco:'',pv_add:'wating',summary:'문제 가능',note:'금형 이관 중'},
+  {pn:'9191090071',name:'FFC CABLE-CONTROL TO GATE DRIVER (50P)',vendor:'주식회사 코리아 료산',type:'FFC 케이블',incoterms:'CIF',origin:'인도',p1_in:'2026-03-15',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090072',name:'FFC CABLE-CONTROL TO INPUT_EMC (50P)',vendor:'주식회사 코리아 료산',type:'FFC 케이블',incoterms:'CIF',origin:'인도',p1_in:'2026-03-15',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191090073',name:'FFC CABLE-CONTROL TO LDC_POWER (40P)',vendor:'주식회사 코리아 료산',type:'FFC 케이블',incoterms:'CIF',origin:'인도',p1_in:'2026-03-15',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'wating',summary:'',note:''},
+  {pn:'9191100042',name:'PCE(PRESSURE COMPENSATION ELEMENT)',vendor:'KOREA NITTO DENKO',type:'PCE',incoterms:'',origin:'한국',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191090171',name:'FOAM GASKET_HE_A',vendor:'이송이엠씨',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:'YSI 입고 필요'},
+  {pn:'9191090172',name:'FOAM GASKET_HE_B',vendor:'이송이엠씨',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:'YSI 입고 필요'},
+  {pn:'9191090173',name:'FOAM GASKET_HE_C',vendor:'이송이엠씨',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:'YSI 입고 필요'},
+  {pn:'9191090174',name:'FOAM GASKET_HE_D',vendor:'이송이엠씨',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:'YSI 입고 필요'},
+  {pn:'9191090188',name:'FOAM GASKET_SHIELD PLATE',vendor:'이송이엠씨',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:'연구소품'},
+  {pn:'9191090169',name:'SHIELD SHEET INPUT FILTER_A',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090170',name:'SHIELD SHEET LDC POWER',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090179',name:'SHIELD SHEET INPUT FILTER_B',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090180',name:'SHIELD SHEET INPUT FILTER_C',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090181',name:'SHIELD SHEET INPUT FILTER_D',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090186',name:'SHIELD SHEET OBC CAP1',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:'업체선정 필요'},
+  {pn:'9191090187',name:'SHIELD SHEET OBC CAP2',vendor:'모티브링크(주)',type:'부자재',incoterms:'CIF',origin:'인도',p1_in:'',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:'업체선정 필요'},
+  {pn:'9191090080',name:'THERMAL SHEET LDC DIODE',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-03-06',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090081',name:'THERMAL SHEET LDC FET',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-03-06',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090083',name:'THERMAL SHEET LDC BOSS',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-03-06',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090156',name:'INSULATION SHEET LDC TR IN',vendor:'(주)세방코포레이션',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090141',name:'THERMAL PAD LDC TRANS',vendor:'실리콘밸리 주식회사',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090142',name:'THERMAL PAD LDC INDUCTOR',vendor:'실리콘밸리 주식회사',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090167',name:'INSULATION SHEET DC CAP',vendor:'(주)세방코포레이션',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'O',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090144',name:'THERMAL SHEET OBC FET 1',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-03-06',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090145',name:'THERMAL SHEET OBC FET 2',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-03-06',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090146',name:'THERMAL SHEET OBC FET 3',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-03-06',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090163',name:'THERMAL PAD SMPS',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090165',name:'THERMAL PAD CURRENT SENSOR',vendor:'엠에스실리콘',type:'부자재',incoterms:'FOB',origin:'한국',p1_in:'2026-02-27',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'sent',summary:'',note:''},
+  {pn:'9191090087',name:'SUPPORT PCB',vendor:'서울 금속',type:'스크류',incoterms:'FOB',origin:'한국',p1_in:'2026-02-28',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191100041',name:'TORX M3X12',vendor:'(주)진합',type:'스크류',incoterms:'직납',origin:'인도',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191090162',name:'SCREW M3X8',vendor:'(주)진합',type:'스크류',incoterms:'직납',origin:'인도',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191090166',name:'SCREW M4X9',vendor:'(주)진합',type:'스크류',incoterms:'직납',origin:'인도',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'O',pv_add:'',summary:'문제 가능',note:'오사양 개발, P1 2차 정상품 투입 예정'},
+  {pn:'9191100102',name:'TORX M5X10',vendor:'(주)진합',type:'스크류',incoterms:'직납',origin:'인도',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191070031',name:'SCREW M4(12MM)',vendor:'(주)진합',type:'스크류',incoterms:'직납',origin:'인도',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191100037',name:'TORX M5X14',vendor:'(주)진합',type:'스크류',incoterms:'직납',origin:'인도',p1_in:'기입고 完',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''},
+  {pn:'9191090008',name:'CONNECTOR SIGNAL ASSY',vendor:'DS CONNECTORS & CABLES INDIA PVT LTD',type:'와이어하네스',incoterms:'직납',origin:'인도',p1_in:'2026-02-28',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090150',name:'HVIL WIRE ASSY',vendor:'DS CONNECTORS & CABLES INDIA PVT LTD',type:'와이어하네스',incoterms:'직납',origin:'인도',p1_in:'2026-02-28',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'OK',summary:'',note:''},
+  {pn:'9191090131',name:'I BUSBAR ON POWER BOARD',vendor:'(주)대현단자',type:'프레스',incoterms:'',origin:'한국',p1_in:'기입고 完',dim_ok:'O',all_tool:'O',pv_eco:'',pv_add:'',summary:'',note:''},
+];
+
+// PARTS: 런타임 편집 가능한 배열 (override 적용)
+let partsOverride = JSON.parse(localStorage.getItem('he_iccu_partsOverride')||'{}');
+// BASE_PARTS를 복사하여 PARTS 생성, override 적용
+let PARTS = BASE_PARTS.map(p=>({proj:'HE ICCU',...p,...(partsOverride[p.pn]||{})}));
+const PART_MAP = {};
+PARTS.forEach(p=>PART_MAP[p.pn]=p);
+
+function savePartsOverride(){localStorage.setItem('he_iccu_partsOverride',JSON.stringify(partsOverride));}
+function resetPartsOverride(){
+  if(!confirm('부품 현황의 모든 수정 사항을 초기화하시겠습니까?\n(ECO/납기/전치수 데이터는 유지됩니다)'))return;
+  partsOverride={};savePartsOverride();
+  PARTS=BASE_PARTS.map(p=>({proj:'HE ICCU',...p}));
+  PARTS.forEach(p=>PART_MAP[p.pn]=p);
+  renderParts();toast('수정 내용 초기화 완료','success');
+}
+function savePartField(pn,field,val){
+  if(!partsOverride[pn])partsOverride[pn]={};
+  partsOverride[pn][field]=val;
+  if(PART_MAP[pn])PART_MAP[pn][field]=val;
+  savePartsOverride();
+  addLog(`[부품수정] ${pn} ${field}: "${val}"`);
+}
+
+// DB
+let DB={
+  bom:       JSON.parse(localStorage.getItem('he_iccu_bom')||'[]'),
+  drawing:   JSON.parse(localStorage.getItem('he_iccu_drawing')||'[]'),
+  delivery:  JSON.parse(localStorage.getItem('he_iccu_delivery')||'[]'),
+  dimension: JSON.parse(localStorage.getItem('he_iccu_dimension')||'[]'),
+  schedule:  JSON.parse(localStorage.getItem('he_iccu_schedule')||'[]'),
+  eco:       JSON.parse(localStorage.getItem('he_iccu_eco')||'[]'),
+  log:       JSON.parse(localStorage.getItem('he_iccu_log')||'[]'),
+};
+function saveDB(){Object.keys(DB).forEach(k=>localStorage.setItem('he_iccu_'+k,JSON.stringify(DB[k])));}
+function today(){return new Date().toISOString().split('T')[0];}
+function nowStr(){return new Date().toLocaleString('ko-KR');}
+function uid(){return Date.now()+'_'+Math.random().toString(36).slice(2,6);}
+
+// 시계
+setInterval(()=>{
+  document.getElementById('clock').textContent=
+    new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+// ════════════════════════════════════════
+// COLUMN FILTER ENGINE
+// ════════════════════════════════════════
+let _cfState={tableId:null,colIdx:null,values:[],active:{}};
+function openColFilter(e,tableId,colIdx){
+  e.stopPropagation();
+  const btn=e.currentTarget;
+  const dd=document.getElementById('filterDropdown');
+  if(dd.classList.contains('open')&&_cfState.tableId===tableId&&_cfState.colIdx===colIdx){closeFilterDropdown();return;}
+  _cfState.tableId=tableId;_cfState.colIdx=colIdx;
+  const th=document.getElementById(tableId)?.querySelectorAll('thead th')[colIdx];
+  document.getElementById('filterDropTitle').textContent=(th?.textContent||'').replace('▼','').replace('✏️','').trim();
+  const rows=[...document.getElementById(tableId).querySelectorAll('tbody tr:not(.row-hidden)')];
+  const vals=new Set();
+  rows.forEach(r=>{const td=r.querySelectorAll('td')[colIdx];if(td)vals.add((td.textContent||'').trim());});
+  _cfState.values=[...vals].sort();
+  const active=_cfState.active[tableId+'_'+colIdx]||null;
+  document.getElementById('filterDropItems').innerHTML=
+    _cfState.values.map(v=>`<label class="filter-item"><input type="checkbox" value="${v}" ${!active||active.has(v)?'checked':''}/>${v||'(빈값)'}</label>`).join('');
+  const rect=btn.getBoundingClientRect();
+  dd.style.left=Math.min(rect.left,window.innerWidth-200)+'px';
+  dd.style.top=(rect.bottom+4)+'px';
+  dd.classList.add('open');
+}
+function filterSelectAll(){document.querySelectorAll('#filterDropItems input').forEach(i=>i.checked=true);}
+function filterSelectNone(){document.querySelectorAll('#filterDropItems input').forEach(i=>i.checked=false);}
+function applyColFilter(){
+  const{tableId,colIdx,values}=_cfState;
+  const filterKey=tableId+'_'+colIdx;
+  const checked=new Set([...document.querySelectorAll('#filterDropItems input:checked')].map(i=>i.value));
+  if(checked.size===values.length){delete _cfState.active[filterKey];}else{_cfState.active[filterKey]=checked;}
+  applyAllFilters(tableId);closeFilterDropdown();updateFilterBtns(tableId);
+}
+function applyAllFilters(tableId){
+  const table=document.getElementById(tableId);if(!table)return;
+  [...table.querySelectorAll('tbody tr')].forEach(row=>{
+    if(row.classList.contains('part-group-header'))return;
+    let show=true;
+    Object.entries(_cfState.active).forEach(([key,allowed])=>{
+      const[tid,ci]=key.split('_');
+      if(tid!==tableId)return;
+      const td=row.querySelectorAll('td')[parseInt(ci)];
+      const val=(td?.textContent||'').trim();
+      if(!allowed.has(val))show=false;
+    });
+    row.classList.toggle('row-hidden',!show);
+  });
+}
+function updateFilterBtns(tableId){
+  const table=document.getElementById(tableId);if(!table)return;
+  table.querySelectorAll('.col-filter-btn').forEach((btn,idx)=>{
+    btn.classList.toggle('active',!!_cfState.active[tableId+'_'+idx]);
+  });
+}
+function clearAllColFilters(tableId){
+  Object.keys(_cfState.active).filter(k=>k.startsWith(tableId+'_')).forEach(k=>delete _cfState.active[k]);
+  applyAllFilters(tableId);updateFilterBtns(tableId);
+}
+function closeFilterDropdown(){document.getElementById('filterDropdown').classList.remove('open');}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#filterDropdown')&&!e.target.closest('.col-filter-btn'))closeFilterDropdown();
+});
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function navigate(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el)el.classList.add('active');
+  ({
+    dashboard:renderDashboard,
+    eco:renderEcoPage,
+    parts:renderParts,
+    partmgr:()=>renderExtraPartList(),
+    bom:renderBom,
+    drawing:renderMech,
+    delivery:()=>{renderDelivery();renderDvBulkPartList();},
+    dimension:renderDimension,
+    schedule:()=>{renderSchedule();renderScBulkPartList();},
+    vendors:renderVendorInfo,
+    log:renderLog
+  }[page]||function(){})();
+}
+function switchDrawTab(tab,el){
+  document.querySelectorAll('.draw-sec').forEach(s=>s.style.display='none');
+  document.getElementById('draw-'+tab).style.display='block';
+  el.closest('.inner-tabs').querySelectorAll('.inner-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='mech')renderMech();else if(tab==='pcba')renderPcba();else renderPcb();
+}
+
+// TOAST & LOG
+function toast(msg,type='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.background=type==='danger'?'#c53030':type==='success'?'#276749':'#2d3748';
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500);
+}
+function addLog(msg){DB.log.unshift({time:nowStr(),msg});if(DB.log.length>300)DB.log.pop();saveDB();}
+function clearLog(){if(!confirm('초기화?'))return;DB.log=[];saveDB();renderLog();}
+function renderLog(){
+  const ul=document.getElementById('logList');
+  ul.innerHTML=DB.log.length
+    ?DB.log.map(l=>`<li><div class="log-time">🕐 ${l.time}</div>${l.msg}</li>`).join('')
+    :'<li style="color:#a0aec0;border-left-color:#e2e8f0">로그 없음</li>';
+}
+
+// BADGE HELPERS
+function distBadge(v){return v==='Y'?'<span class="badge badge-success">✅ 배포완료</span>':'<span class="badge badge-danger">🚨 미배포</span>';}
+function dDay(target,done){
+  if(done==='done'||done==='납품완료'||done==='기입고 完')return '<span class="dday-ok">✅ 완료</span>';
+  if(!target||target==='기입고 完')return '<span class="dday-ok">✅ 기입고</span>';
+  const d=Math.ceil((new Date(target)-new Date())/864e5);
+  if(d<0)return `<span class="dday-danger">D+${Math.abs(d)} 지연</span>`;
+  if(d<=3)return `<span class="dday-danger">D-${d}</span>`;
+  if(d<=7)return `<span style="color:var(--warning);font-weight:700">D-${d}</span>`;
+  return `<span class="dday-ok">D-${d}</span>`;
+}
+function dvBadge(s){return{pending:'<span class="badge badge-gray">⏳ 미입고</span>',partial:'<span class="badge badge-warning">📦 부분입고</span>',done:'<span class="badge badge-success">✅ 완료</span>',delay:'<span class="badge badge-danger">🚨 지연</span>'}[s]||'';}
+function dimBadge(r){return{pending:'<span class="badge badge-gray">⏳ 미접수</span>',checking:'<span class="badge badge-info">🔄 검사중</span>',pass:'<span class="badge badge-success">✅ 만족</span>',fail:'<span class="badge badge-danger">❌ 불만족</span>'}[r]||'';}
+function stageBadge(s){const c={도면검토:'badge-info',견적:'badge-warning',발주:'badge-info',제작중:'badge-purple',검사중:'badge-warning',납품완료:'badge-success'};return `<span class="badge ${c[s]||'badge-gray'}">${s}</span>`;}
+function ecoStatusBadge(s){return s==='done'?'<span class="badge badge-success">✅ 완료</span>':'<span class="badge badge-danger">🔴 진행중</span>';}
+function ecoTypeBadge(t){const c={도면변경:'badge-info',BOM변경:'badge-eco',사양변경:'badge-purple',자재변경:'badge-warning',공정변경:'badge-gray',기타:'badge-gray'};return `<span class="badge ${c[t]||'badge-gray'}">${t}</span>`;}
+const FLAGS={'한국':'🇰🇷','인도':'🇮🇳','베트남':'🇻🇳','일본':'🇯🇵','중국':'🇨🇳'};
+function dimOkBadge(v){
+  if(v==='O')return '<span class="badge badge-success">O</span>';
+  if(v==='X')return '<span class="badge badge-danger">X</span>';
+  if(v==='ING')return '<span class="badge badge-warning">ING</span>';
+  return '<span style="color:#a0aec0;font-size:.72rem">-</span>';
+}
+
+// HELPERS
+function getLatestDrawing(pn,type){
+  return DB.drawing.filter(x=>x.pn===pn&&x.type===type).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;
+}
+function closeModal(t){document.getElementById('modal-'+t).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(mo=>{
+  mo.addEventListener('click',e=>{if(e.target===mo)mo.classList.remove('show');});
+});
+function populatePnSelect(selId,typeFilter){
+  const sel=document.getElementById(selId);if(!sel)return;
+  let parts=PARTS;
+  if(typeFilter==='mech')parts=parts.filter(p=>!['PCBA','PCB'].includes(p.type));
+  else if(typeFilter==='pcba')parts=parts.filter(p=>p.type==='PCBA');
+  else if(typeFilter==='pcb')parts=parts.filter(p=>p.type==='PCB');
+  sel.innerHTML='<option value="">-- 품번 선택 --</option>'+
+    parts.map(p=>`<option value="${p.pn}" data-vendor="${p.vendor}">${p.pn} | ${p.name}</option>`).join('');
+}
+
+// ════════════════════════════════════════
+// 인라인 편집 함수
+// ════════════════════════════════════════
+function makeEditable(pn,field,val){
+  const display = val ? `<span style="font-size:.8rem">${val}</span>` : '<span style="color:#a0aec0;font-size:.76rem">클릭하여 입력</span>';
+  return `<span class="editable-cell" title="클릭하여 수정"
+    onclick="startInlineEdit(this,'${pn}','${field}')"
+  >${display}</span>`;
+}
+
+function makeEditableSelect(pn,field,val,options,displayFn){
+  const display = displayFn(val);
+  const optHtml = options.map(o=>`<option value="${o.v}" ${o.v===val?'selected':''}>${o.l}</option>`).join('');
+  return `<span class="editable-cell" title="클릭하여 수정" onclick="this.querySelector('select').style.display='inline-block';this.querySelector('select').focus()">
+    <span class="disp-val">${display}</span>
+    <select class="inline-select" style="display:none"
+      onchange="commitSelectEdit(this,'${pn}','${field}')"
+      onblur="this.style.display='none'">
+      ${optHtml}
+    </select>
+  </span>`;
+}
+
+function startInlineEdit(cell,pn,field){
+  if(cell.querySelector('input'))return;
+  const currentVal=PART_MAP[pn]?.[field]||'';
+  cell.classList.add('editing');
+  const prev=cell.innerHTML;
+  cell.innerHTML=`<input class="inline-input" value="${currentVal.replace(/"/g,'&quot;')}"
+    data-prev="${prev.replace(/"/g,'&quot;')}"
+    onblur="commitInlineEdit(this,'${pn}','${field}')"
+    onkeydown="handleInlineKey(event,this,'${pn}','${field}')"
+    style="min-width:80px;max-width:160px"/>`;
+  const inp=cell.querySelector('input');
+  inp.focus();inp.select();
+}
+
+function handleInlineKey(e,inp,pn,field){
+  if(e.key==='Enter'){e.preventDefault();inp.blur();}
+  if(e.key==='Escape'){
+    const cell=inp.closest('.editable-cell');
+    cell.innerHTML=inp.dataset.prev;
+    cell.classList.remove('editing');
+  }
+}
+
+function commitInlineEdit(inp,pn,field){
+  const val=inp.value.trim();
+  const cell=inp.closest('.editable-cell');
+  savePartField(pn,field,val);
+  // 즉시 표시 업데이트
+  cell.classList.remove('editing');
+  cell.innerHTML=val?`<span style="font-size:.8rem">${val}</span>`:'<span style="color:#a0aec0;font-size:.76rem">클릭하여 입력</span>';
+  cell.onclick=()=>startInlineEdit(cell,pn,field);
+  toast(`${pn} ${field} 저장 완료`,'success');
+}
+
+function commitSelectEdit(sel,pn,field){
+  const val=sel.value;
+  savePartField(pn,field,val);
+  sel.style.display='none';
+  // 디스플레이 업데이트를 위해 부품 현황 재렌더
+  renderParts();
+  toast(`${pn} ${field} 저장 완료`,'success');
+}
+
+// ════════════════════════════════════════
+// 부품 현황 렌더링 (인라인 편집 포함)
+// ════════════════════════════════════════
+function renderParts(){
+  const q=(document.getElementById('partSearch')?.value||'').toLowerCase();
+  const vf=document.getElementById('partVendorF')?.value||'ALL';
+  const tf=document.getElementById('partTypeF')?.value||'ALL';
+  const rf=document.getElementById('partRiskF')?.value||'ALL';
+  let filtered=PARTS.filter(p=>{
+    if(vf!=='ALL'&&p.vendor!==vf)return false;
+    if(tf!=='ALL'&&p.type!==tf)return false;
+    if(rf==='RISK'&&p.summary!=='문제 가능')return false;
+    if(rf==='PV_ECO'&&p.pv_eco!=='O')return false;
+    if(q&&!p.pn.toLowerCase().includes(q)&&!p.name.toLowerCase().includes(q)&&!p.vendor.toLowerCase().includes(q))return false;
+    return true;
+  });
+  document.getElementById('partCount').textContent=`총 ${filtered.length}개 (전체 ${PARTS.length}개)`;
+  const tb=document.getElementById('partsBody');
+
+  const ecoCountByPn={};
+  (DB.eco||[]).forEach(e=>{ecoCountByPn[e.pn]=(ecoCountByPn[e.pn]||0)+1;});
+  const openEcoByPn={};
+  (DB.eco||[]).filter(e=>e.status==='open').forEach(e=>{openEcoByPn[e.pn]=(openEcoByPn[e.pn]||0)+1;});
+
+  tb.innerHTML=filtered.map(p=>{
+    const dv=DB.delivery.find(x=>x.pn===p.pn);
+    const isRisk=p.summary==='문제 가능';
+    const ecoCnt=ecoCountByPn[p.pn]||0;
+    const openEco=openEcoByPn[p.pn]||0;
+    const isModified=!!partsOverride[p.pn];
+
+    // 선택형 편집 표시 함수
+    const dimDisplay=(v)=>{if(v==='O')return '<span class="badge badge-success">O</span>';if(v==='X')return '<span class="badge badge-danger">X</span>';if(v==='ING')return '<span class="badge badge-warning">ING</span>';return '<span style="color:#a0aec0;font-size:.72rem">-</span>';};
+    const pvDisplay=(v)=>v==='O'?'<span class="badge badge-pv">설변</span>':'<span style="color:#a0aec0;font-size:.72rem">-</span>';
+    const summaryDisplay=(v)=>v==='문제 가능'?'<span class="badge badge-risk">🚨 문제 가능</span>':(v?`<span class="badge badge-info">${v}</span>`:'<span style="color:#a0aec0;font-size:.72rem">-</span>');
+
+    return `<tr class="${isRisk?'row-warning':''}">
+      <td style="font-family:monospace;font-size:.74rem;font-weight:700">
+        ${p.pn}
+        ${isModified?'<span title="수정됨" style="color:#2e7de9;font-size:.6rem;margin-left:2px">✎</span>':''}
+      </td>
+      <td style="max-width:150px">${makeEditable(p.pn,'name',p.name)}</td>
+      <td>${makeEditable(p.pn,'vendor',p.vendor)}</td>
+      <td><span class="badge badge-gray">${p.type}</span></td>
+      <td>${makeEditable(p.pn,'incoterms',p.incoterms)}</td>
+      <td>${makeEditable(p.pn,'origin',p.origin)}</td>
+      <td>${makeEditable(p.pn,'p1_in',p.p1_in)}</td>
+      <td>${makeEditableSelect(p.pn,'dim_ok',p.dim_ok,[
+        {v:'O',l:'O ✅'},{v:'X',l:'X ❌'},{v:'ING',l:'ING 🔄'},{v:'',l:'- (미확인)'}
+      ],dimDisplay)}</td>
+      <td>${makeEditableSelect(p.pn,'pv_eco',p.pv_eco,[
+        {v:'O',l:'O (설변)'},{v:'',l:'- (없음)'}
+      ],pvDisplay)}</td>
+      <td>${makeEditableSelect(p.pn,'summary',p.summary,[
+        {v:'문제 가능',l:'🚨 문제 가능'},{v:'',l:'- (정상)'}
+      ],summaryDisplay)}</td>
+      <td style="max-width:130px">${makeEditable(p.pn,'note',p.note)}</td>
+      <td style="text-align:center;white-space:nowrap">
+        ${ecoCnt>0
+          ?`<button class="btn btn-xs" style="background:#fffbeb;color:#92400e;border:1px solid #fcd34d;margin-bottom:2px"
+              onclick="gotoPartEco('${p.pn}')">🔄 ${ecoCnt}건${openEco>0?` (진행 ${openEco})`:''}</button><br>`
+          :''}
+        <button class="btn btn-xs btn-primary" onclick="openEcoModalFor('${p.pn}')">+ ECO</button>
+      </td>
+      <td>${dv?`${dvBadge(dv.status)} <span style="font-size:.71rem;color:#718096">${dv.inQty||0}/${dv.orderQty||0}</span>`:'<span style="color:#a0aec0;font-size:.72rem">미등록</span>'}</td>
+    </tr>`;
+  }).join('');
+  setTimeout(()=>applyAllFilters('partsTable'),0);
+}
+
+function gotoPartEco(pn){
+  document.querySelector('.nav-item:nth-child(5)') && navigate('eco',null);
+  // nav-item 직접 찾아서 활성화
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.textContent.includes('설계변경')){n.classList.add('active');}
+    else n.classList.remove('active');
+  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-eco').classList.add('active');
+  setTimeout(()=>{
+    document.getElementById('ecoSearch').value=pn;
+    renderEcoPage();
+  },100);
+}
+
+// ════════════════════════════════════════
+// ECO 관리
+// ════════════════════════════════════════
+function initEcoFilters(){
+  const vendors=[...new Set(PARTS.map(p=>p.vendor))].sort();
+  const sel=document.getElementById('ecoVendorF');
+  if(sel)sel.innerHTML='<option value="ALL">전체 업체</option>'+vendors.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+
+function openEcoModal(editId){
+  document.getElementById('eco_editId').value=editId||'';
+  document.getElementById('ecoModalTitle').textContent=editId?'🔄 설계변경 수정':'🔄 설계변경(ECO) 등록';
+  populatePnSelect('eco_pn','all');
+  ['eco_num','eco_vendor','eco_change','eco_reason','eco_impact','eco_owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('eco_date').value=today();
+  document.getElementById('eco_duedate').value='';
+  document.getElementById('eco_type').value='도면변경';
+  document.getElementById('eco_status').value='open';
+  if(editId){
+    const it=(DB.eco||[]).find(e=>e.id===editId);
+    if(it){
+      document.getElementById('eco_num').value=it.ecoNum||'';
+      document.getElementById('eco_type').value=it.type||'도면변경';
+      document.getElementById('eco_pn').value=it.pn||'';
+      document.getElementById('eco_vendor').value=it.vendor||'';
+      document.getElementById('eco_date').value=it.date||today();
+      document.getElementById('eco_owner').value=it.owner||'';
+      document.getElementById('eco_change').value=it.change||'';
+      document.getElementById('eco_reason').value=it.reason||'';
+      document.getElementById('eco_impact').value=it.impact||'';
+      document.getElementById('eco_status').value=it.status||'open';
+      document.getElementById('eco_duedate').value=it.duedate||'';
+    }
+  }
+  document.getElementById('modal-eco').classList.add('show');
+}
+
+function openEcoModalFor(pn){
+  openEcoModal();
+  setTimeout(()=>{
+    document.getElementById('eco_pn').value=pn;
+    autoFillEcoPart();
+  },50);
+}
+
+function autoFillEcoPart(){
+  const pn=document.getElementById('eco_pn').value;
+  document.getElementById('eco_vendor').value=PART_MAP[pn]?.vendor||'';
+}
+
+function saveEco(){
+  const editId=document.getElementById('eco_editId').value;
+  const ecoNum=document.getElementById('eco_num').value.trim();
+  const type=document.getElementById('eco_type').value;
+  const pn=document.getElementById('eco_pn').value;
+  const vendor=document.getElementById('eco_vendor').value;
+  const date=document.getElementById('eco_date').value;
+  const owner=document.getElementById('eco_owner').value.trim();
+  const change=document.getElementById('eco_change').value.trim();
+  const reason=document.getElementById('eco_reason').value.trim();
+  const impact=document.getElementById('eco_impact').value.trim();
+  const status=document.getElementById('eco_status').value;
+  const duedate=document.getElementById('eco_duedate').value;
+  if(!ecoNum||!pn||!date||!change||!owner){alert('ECO번호, 품번, 일자, 변경내용, 담당자는 필수입니다.');return;}
+  const pname=PART_MAP[pn]?.name||'';
+  const item={id:editId||uid(),ecoNum,type,pn,pname,vendor,date,owner,change,reason,impact,status,duedate,updAt:nowStr()};
+  if(!DB.eco)DB.eco=[];
+  if(editId){const idx=DB.eco.findIndex(e=>e.id===editId);if(idx>=0)DB.eco[idx]=item;}
+  else DB.eco.unshift(item);
+  addLog(`[ECO] ${ecoNum} — ${pn}(${vendor}) ${type} 등록 담당:${owner}`);
+  saveDB();renderEcoPage();renderParts();closeModal('eco');
+  toast(`✅ [${ecoNum}] 설계변경 등록완료`,'success');
+  updateEcoBadge();
+}
+
+function delEco(id){
+  if(!confirm('삭제하시겠습니까?'))return;
+  DB.eco=(DB.eco||[]).filter(e=>e.id!==id);
+  saveDB();renderEcoPage();renderParts();updateEcoBadge();
+  toast('삭제완료','success');
+}
+
+function closeEco(id){
+  const it=(DB.eco||[]).find(e=>e.id===id);if(!it)return;
+  it.status='done';it.duedate=it.duedate||today();it.updAt=nowStr();
+  addLog(`[ECO완료] ${it.ecoNum} — ${it.pn}(${it.vendor})`);
+  saveDB();renderEcoPage();renderParts();updateEcoBadge();
+  toast(`[${it.ecoNum}] 완료 처리`,'success');
+}
+
+function updateEcoBadge(){
+  const openCnt=(DB.eco||[]).filter(e=>e.status==='open').length;
+  const nb=document.getElementById('nb-eco');
+  if(nb){nb.style.display=openCnt?'inline-block':'none';if(openCnt)nb.textContent=openCnt;}
+}
+
+function renderEcoPage(){
+  if(!DB.eco)DB.eco=[];
+  const total=DB.eco.length;
+  const open=DB.eco.filter(e=>e.status==='open').length;
+  const done=DB.eco.filter(e=>e.status==='done').length;
+  const affectedPns=new Set(DB.eco.map(e=>e.pn)).size;
+  document.getElementById('ecoStats').innerHTML=`
+    <div class="stat-card"><h4>총 ECO 건수</h4><p>${total}</p></div>
+    <div class="stat-card danger"><h4>🔴 진행중</h4><p>${open}</p></div>
+    <div class="stat-card success"><h4>✅ 완료</h4><p>${done}</p></div>
+    <div class="stat-card warning"><h4>🔩 영향 품번</h4><p>${affectedPns}</p></div>
+  `;
+  const q=(document.getElementById('ecoSearch')?.value||'').toLowerCase();
+  const vf=document.getElementById('ecoVendorF')?.value||'ALL';
+  const tf=document.getElementById('ecoTypeF')?.value||'ALL';
+  const sf=document.getElementById('ecoStatusF')?.value||'ALL';
+  let filtered=DB.eco.filter(e=>{
+    if(vf!=='ALL'&&e.vendor!==vf)return false;
+    if(tf!=='ALL'&&e.type!==tf)return false;
+    if(sf!=='ALL'&&e.status!==sf)return false;
+    if(q&&!e.pn.toLowerCase().includes(q)&&!(e.pname||'').toLowerCase().includes(q)&&
+       !(e.vendor||'').toLowerCase().includes(q)&&!(e.ecoNum||'').toLowerCase().includes(q)&&
+       !(e.change||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  const tb=document.getElementById('ecoBody');
+  if(!filtered.length){
+    tb.innerHTML=`<tr><td colspan="12" style="text-align:center;color:#a0aec0;padding:24px">
+      등록된 설계변경 이력이 없습니다<br>
+      <button class="btn btn-primary" onclick="openEcoModal()" style="margin-top:12px">+ 첫 번째 ECO 등록</button>
+    </td></tr>`;
+  }else{
+    tb.innerHTML=filtered.map(e=>`<tr class="${e.status==='open'?'row-warning':''}">
+      <td><span class="badge badge-eco" style="font-size:.75rem">${e.ecoNum}</span></td>
+      <td style="font-family:monospace;font-size:.74rem">${e.pn}</td>
+      <td style="font-size:.78rem;max-width:120px">${e.pname}</td>
+      <td style="font-size:.78rem"><strong>${e.vendor}</strong></td>
+      <td>${ecoTypeBadge(e.type)}</td>
+      <td style="font-size:.77rem">${e.date}</td>
+      <td style="font-size:.78rem;max-width:170px">${e.change}</td>
+      <td style="font-size:.75rem;color:#718096;max-width:110px">${e.impact||'-'}</td>
+      <td>${ecoStatusBadge(e.status)}</td>
+      <td style="font-size:.77rem">${e.owner}</td>
+      <td style="font-size:.77rem">${e.duedate||'-'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-xs btn-primary" onclick="openEcoModal('${e.id}')">수정</button>
+        ${e.status==='open'?`<button class="btn btn-xs btn-success" onclick="closeEco('${e.id}')" style="margin-left:2px">완료</button>`:''}
+        <button class="btn btn-xs btn-danger" onclick="delEco('${e.id}')" style="margin-left:2px">삭제</button>
+      </td>
+    </tr>`).join('');
+  }
+  setTimeout(()=>applyAllFilters('ecoTable'),0);
+
+  // 부품별 ECO 현황
+  const byPn={};
+  DB.eco.forEach(e=>{
+    if(!byPn[e.pn])byPn[e.pn]={pn:e.pn,pname:e.pname,vendor:e.vendor,ecos:[],open:0,done:0};
+    byPn[e.pn].ecos.push(e);
+    if(e.status==='open')byPn[e.pn].open++;else byPn[e.pn].done++;
+  });
+  const sorted=Object.values(byPn).sort((a,b)=>b.ecos.length-a.ecos.length);
+  const listEl=document.getElementById('ecoByPartList');
+  if(!sorted.length){listEl.innerHTML='<div style="color:#a0aec0;font-size:.85rem;padding:12px">등록된 설계변경이 없습니다.</div>';return;}
+  listEl.innerHTML=sorted.map(p=>`
+    <div class="eco-history-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+        <div>
+          <span style="font-family:monospace;font-weight:700;font-size:.82rem">${p.pn}</span>
+          <span style="font-size:.82rem;margin-left:8px">${p.pname}</span>
+          <span class="badge badge-gray" style="margin-left:6px;font-size:.69rem">${p.vendor}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${p.open>0?`<span class="badge badge-danger">🔴 진행중 ${p.open}건</span>`:''}
+          ${p.done>0?`<span class="badge badge-success">완료 ${p.done}건</span>`:''}
+          <span class="badge badge-info">총 ${p.ecos.length}건</span>
+          <button class="btn btn-xs btn-primary" onclick="openEcoModalFor('${p.pn}')">+ ECO 추가</button>
+        </div>
+      </div>
+      <div>
+        ${p.ecos.sort((a,b)=>b.date.localeCompare(a.date)).map((e,i)=>`
+          <div class="eco-history-item">
+            <div class="eco-dot ${i===0?'latest':''}"></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
+                <span class="badge badge-eco" style="font-size:.69rem">${e.ecoNum}</span>
+                ${ecoTypeBadge(e.type)}
+                ${ecoStatusBadge(e.status)}
+                <span style="font-size:.72rem;color:#a0aec0">${e.date} · ${e.owner}</span>
+              </div>
+              <div style="font-size:.79rem;color:#2d3748;word-break:break-all">${e.change}</div>
+              ${e.reason?`<div style="font-size:.73rem;color:#718096;margin-top:2px">📌 사유: ${e.reason}</div>`:''}
+              ${e.impact?`<div style="font-size:.73rem;color:#718096">🔗 영향: ${e.impact}</div>`:''}
+            </div>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <button class="btn btn-xs btn-primary" onclick="openEcoModal('${e.id}')">수정</button>
+              ${e.status==='open'?`<button class="btn btn-xs btn-success" onclick="closeEco('${e.id}')">완료</button>`:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════
+// BOM
+// ════════════════════════════════════════
+function openBomModal(){
+  document.getElementById('b_date').value=today();
+  ['b_rev','b_change','b_reason','b_owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('b_dist').value='N';
+  document.getElementById('modal-bom').classList.add('show');
+}
+function saveBom(){
+  const rev=document.getElementById('b_rev').value.trim();
+  const date=document.getElementById('b_date').value;
+  const change=document.getElementById('b_change').value.trim();
+  const reason=document.getElementById('b_reason').value.trim();
+  const owner=document.getElementById('b_owner').value.trim();
+  const dist=document.getElementById('b_dist').value;
+  if(!rev||!date||!change||!owner){alert('필수 항목을 입력해주세요.');return;}
+  DB.bom.unshift({id:uid(),rev,date,change,reason,owner,dist,distAt:dist==='Y'?nowStr():''});
+  addLog(`[BOM] ${rev} 등록 배포:${dist==='Y'?'완료':'미배포'}`);
+  saveDB();renderBom();closeModal('bom');
+  toast(dist==='Y'?`BOM ${rev} 배포완료`:`BOM ${rev} 등록(미배포!)`,dist==='Y'?'success':'danger');
+  checkAlerts();
+}
+function bomDist(id){const it=DB.bom.find(x=>x.id===id);if(!it)return;it.dist='Y';it.distAt=nowStr();addLog(`[BOM] ${it.rev}→THREEB배포완료`);saveDB();renderBom();toast('배포완료','success');checkAlerts();}
+function delBom(id){if(!confirm('삭제?'))return;DB.bom=DB.bom.filter(x=>x.id!==id);saveDB();renderBom();}
+function renderBom(){
+  const tb=document.getElementById('bomBody');if(!tb)return;
+  if(!DB.bom.length){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#a0aec0;padding:16px">등록된 BOM 없음</td></tr>';return;}
+  tb.innerHTML=DB.bom.map(b=>`<tr class="${b.dist==='N'?'row-danger':''}">
+    <td><strong>${b.rev}</strong></td><td>${b.date}</td>
+    <td style="max-width:200px;font-size:.78rem">${b.change}</td>
+    <td style="font-size:.75rem;color:#718096">${b.reason||'-'}</td>
+    <td>${b.owner}</td><td>${distBadge(b.dist)}</td>
+    <td style="font-size:.72rem;color:#a0aec0">${b.distAt||'-'}</td>
+    <td>${b.dist==='Y'?'<span class="badge badge-success">완료</span>':'<span class="badge badge-danger">🚨 미배포</span>'}</td>
+    <td style="white-space:nowrap">
+      ${b.dist==='N'?`<button class="btn btn-xs btn-success" onclick="bomDist('${b.id}')">배포완료</button>`:''}
+      <button class="btn btn-xs btn-danger" onclick="delBom('${b.id}')" style="margin-left:3px">삭제</button>
+    </td></tr>`).join('');
+}
+
+// ════════════════════════════════════════
+// 기구물 일괄 ECO
+// ════════════════════════════════════════
+let bulkSelected=new Set();
+function updateBulkBar(){
+  document.getElementById('bulkSelectedCount').textContent=bulkSelected.size;
+  document.getElementById('bulkReadyMsg').textContent=bulkSelected.size>0?`✅ ${bulkSelected.size}개 품번 선택됨`:'품번을 선택하고 정보를 입력하세요';
+}
+function onMechCheck(pn,checked){
+  if(checked)bulkSelected.add(pn);else bulkSelected.delete(pn);updateBulkBar();
+  const row=document.querySelector(`#mechBody tr[data-pn="${pn}"]`);if(row)row.classList.toggle('selected-row',checked);
+  const ca=document.getElementById('mechCheckAll');const all=[...document.querySelectorAll('.mech-part-check')];
+  if(ca)ca.checked=all.length>0&&all.every(c=>c.checked);
+}
+function mechCheckAllToggle(master){document.querySelectorAll('.mech-part-check').forEach(c=>{c.checked=master.checked;onMechCheck(c.value,master.checked);});}
+function bulkSelectAll(){document.querySelectorAll('.mech-part-check').forEach(c=>{c.checked=true;onMechCheck(c.value,true);});}
+function bulkSelectNone(){document.querySelectorAll('.mech-part-check').forEach(c=>{c.checked=false;onMechCheck(c.value,false);});}
+function bulkSelectUndist(){bulkSelectNone();document.querySelectorAll('.mech-part-check').forEach(c=>{const l=getLatestDrawing(c.value,'mech');if(!l||l.distVendor==='N'){c.checked=true;onMechCheck(c.value,true);}});}
+function executeBulkEco(){
+  const eco=document.getElementById('bulk_eco').value.trim();
+  const date=document.getElementById('bulk_date').value;
+  const owner=document.getElementById('bulk_owner').value.trim();
+  const dist=document.getElementById('bulk_dist').value;
+  const change=document.getElementById('bulk_change').value.trim();
+  if(!eco||!date||!owner||!change){alert('모두 입력해주세요.');return;}
+  if(bulkSelected.size===0){alert('품번을 먼저 선택해주세요.');return;}
+  if(!confirm(`총 ${bulkSelected.size}개 품번에 ECO [${eco}]를 일괄 등록하시겠습니까?`))return;
+  let cnt=0;
+  bulkSelected.forEach(pn=>{
+    const part=PART_MAP[pn];if(!part)return;
+    DB.drawing.unshift({id:uid(),type:'mech',pn,pname:part.name,vendor:part.vendor,eco,date,change,owner,
+      distVendor:dist,dist1:'N',dist2:'N',distVendorAt:dist==='Y'?nowStr():'',dist1At:'',dist2At:''});cnt++;
+  });
+  addLog(`[일괄ECO] ECO:${eco} — ${cnt}개 품번 일괄 등록`);
+  saveDB();bulkSelected.clear();updateBulkBar();
+  document.getElementById('bulk_eco').value='';document.getElementById('bulk_change').value='';
+  renderMech();toast(`✅ ${cnt}개 품번 ECO [${eco}] 일괄 등록완료`,'success');checkAlerts();
+}
+
+// PCBA 일괄
+let pcbaBulkSelected=new Set();
+function onPcbaCheck(pn,checked){if(checked)pcbaBulkSelected.add(pn);else pcbaBulkSelected.delete(pn);const row=document.querySelector(`#pcbaBody tr[data-pn="${pn}"]`);if(row)row.classList.toggle('selected-row',checked);const ca=document.getElementById('pcbaCheckAll');const all=[...document.querySelectorAll('.pcba-part-check')];if(ca)ca.checked=all.length>0&&all.every(c=>c.checked);}
+function pcbaCheckAllToggle(master){document.querySelectorAll('.pcba-part-check').forEach(c=>{c.checked=master.checked;onPcbaCheck(c.value,master.checked);});}
+
+// PCB 일괄
+let pcbBulkSelected=new Set();
+function onPcbCheck(pn,checked){if(checked)pcbBulkSelected.add(pn);else pcbBulkSelected.delete(pn);const row=document.querySelector(`#pcbBody tr[data-pn="${pn}"]`);if(row)row.classList.toggle('selected-row',checked);const ca=document.getElementById('pcbCheckAll');const all=[...document.querySelectorAll('.pcb-part-check')];if(ca)ca.checked=all.length>0&&all.every(c=>c.checked);}
+function pcbCheckAllToggle(master){document.querySelectorAll('.pcb-part-check').forEach(c=>{c.checked=master.checked;onPcbCheck(c.value,master.checked);});}
+
+// DRAWING
+function openDrawModal(type){
+  document.getElementById('dw_type').value=type;
+  const titles={mech:'🔩 기구물 도면 ECO 단건 등록',pcba:'🔌 PCBA 도면 ECO 등록',pcb:'🟢 PCB 거버데이터 ECO 등록'};
+  document.getElementById('drawMTitle').textContent=titles[type];
+  populatePnSelect('dw_pn',type);
+  ['dw_vendor','dw_eco','dw_change','dw_owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dw_date').value=today();
+  document.getElementById('dw_vendor_info').style.display='none';
+  document.getElementById('dw_mech_dist').style.display=type==='mech'?'block':'none';
+  document.getElementById('dw_fixed_dist').style.display=type!=='mech'?'block':'none';
+  document.getElementById('dw_pcb_dist2').style.display=type==='pcb'?'block':'none';
+  document.getElementById('dw_dist_mech').value='N';
+  document.getElementById('dw_dist1').value='N';
+  document.getElementById('dw_dist2').value='N';
+  document.getElementById('modal-draw').classList.add('show');
+}
+function onDrawPnChange(){
+  const pnSel=document.getElementById('dw_pn');const opt=pnSel.options[pnSel.selectedIndex];
+  const vendor=opt?.dataset.vendor||'';document.getElementById('dw_vendor').value=vendor;
+  const type=document.getElementById('dw_type').value;
+  if(type==='mech'&&vendor){document.getElementById('dw_vendor_info').style.display='block';document.getElementById('dw_vendor_display').textContent=vendor;document.getElementById('dw_mech_dist_label').textContent=`${vendor} 배포 여부`;}
+  else document.getElementById('dw_vendor_info').style.display='none';
+}
+function saveDrawing(){
+  const type=document.getElementById('dw_type').value;
+  const pnSel=document.getElementById('dw_pn');const pn=pnSel.value;
+  const pname=PART_MAP[pn]?.name||'';const vendor=document.getElementById('dw_vendor').value;
+  const eco=document.getElementById('dw_eco').value.trim();const date=document.getElementById('dw_date').value;
+  const change=document.getElementById('dw_change').value.trim();const owner=document.getElementById('dw_owner').value.trim();
+  if(!pn||!eco||!date||!change||!owner){alert('필수 항목을 입력해주세요.');return;}
+  let distVendor='N',dist1='N',dist2='N';
+  if(type==='mech')distVendor=document.getElementById('dw_dist_mech').value;
+  else if(type==='pcb'){dist1=document.getElementById('dw_dist1').value;dist2=document.getElementById('dw_dist2').value;}
+  else dist1=document.getElementById('dw_dist1').value;
+  DB.drawing.unshift({id:uid(),type,pn,pname,vendor,eco,date,change,owner,distVendor,dist1,dist2,
+    distVendorAt:distVendor==='Y'?nowStr():'',dist1At:dist1==='Y'?nowStr():'',dist2At:dist2==='Y'?nowStr():''});
+  addLog(`[도면-${type}] ${pn}(${vendor}) ECO:${eco} 등록`);
+  saveDB();if(type==='mech')renderMech();else if(type==='pcba')renderPcba();else renderPcb();
+  closeModal('draw');toast(`${pn} ECO ${eco} 등록완료`,'success');checkAlerts();
+}
+function distVendorDone(id){const it=DB.drawing.find(x=>x.id===id);if(!it)return;it.distVendor='Y';it.distVendorAt=nowStr();addLog(`[기구물도면] ${it.pn} ECO:${it.eco}→${it.vendor}배포완료`);saveDB();renderMech();toast(`${it.vendor}배포완료`,'success');checkAlerts();}
+function distFixed(id,field){const it=DB.drawing.find(x=>x.id===id);if(!it)return;it[field]='Y';it[field+'At']=nowStr();const label=field==='dist1'?'THREEB':'신협전자';addLog(`[도면-${it.type}] ${it.pn} ECO:${it.eco}→${label}배포완료`);saveDB();if(it.type==='pcba')renderPcba();else renderPcb();toast(`${label}배포완료`,'success');checkAlerts();}
+function delDrawing(id){if(!confirm('삭제?'))return;const it=DB.drawing.find(x=>x.id===id);DB.drawing=DB.drawing.filter(x=>x.id!==id);saveDB();if(it?.type==='mech')renderMech();else if(it?.type==='pcba')renderPcba();else renderPcb();}
+function openDrawEdit(id){
+  const it=DB.drawing.find(x=>x.id===id);if(!it)return;
+  document.getElementById('de_id').value=it.id;document.getElementById('de_type').value=it.type;
+  document.getElementById('de_pn').value=it.pn+' | '+it.pname;document.getElementById('de_vendor').value=it.vendor;
+  document.getElementById('de_eco').value=it.eco;document.getElementById('de_date').value=it.date;
+  document.getElementById('de_change').value=it.change;document.getElementById('de_owner').value=it.owner;
+  document.getElementById('de_mech_wrap').style.display=it.type==='mech'?'block':'none';
+  document.getElementById('de_pcba_wrap').style.display=it.type==='pcba'?'block':'none';
+  document.getElementById('de_pcb_wrap').style.display=it.type==='pcb'?'block':'none';
+  const titles={mech:'🔩 기구물 도면 수정',pcba:'🔌 PCBA 도면 수정',pcb:'🟢 PCB 거버 수정'};
+  document.getElementById('drawEditTitle').textContent=titles[it.type]||'도면 수정';
+  if(it.type==='mech'){document.getElementById('de_distVendor').value=it.distVendor||'N';document.getElementById('de_distVendorAt').value=it.distVendorAt||'';}
+  else if(it.type==='pcba'){document.getElementById('de_dist1').value=it.dist1||'N';document.getElementById('de_dist1At').value=it.dist1At||'';}
+  else{document.getElementById('de_dist1_pcb').value=it.dist1||'N';document.getElementById('de_dist1At_pcb').value=it.dist1At||'';document.getElementById('de_dist2').value=it.dist2||'N';document.getElementById('de_dist2At').value=it.dist2At||'';}
+  document.getElementById('modal-draw-edit').classList.add('show');
+}
+function saveDrawEdit(){
+  const id=document.getElementById('de_id').value;const type=document.getElementById('de_type').value;
+  const eco=document.getElementById('de_eco').value.trim();const date=document.getElementById('de_date').value;
+  const change=document.getElementById('de_change').value.trim();const owner=document.getElementById('de_owner').value.trim();
+  if(!eco||!date||!change||!owner){alert('필수 항목을 입력해주세요.');return;}
+  const it=DB.drawing.find(x=>x.id===id);if(!it)return;
+  it.eco=eco;it.date=date;it.change=change;it.owner=owner;
+  if(type==='mech'){it.distVendor=document.getElementById('de_distVendor').value;it.distVendorAt=document.getElementById('de_distVendorAt').value;}
+  else if(type==='pcba'){it.dist1=document.getElementById('de_dist1').value;it.dist1At=document.getElementById('de_dist1At').value;}
+  else{it.dist1=document.getElementById('de_dist1_pcb').value;it.dist1At=document.getElementById('de_dist1At_pcb').value;it.dist2=document.getElementById('de_dist2').value;it.dist2At=document.getElementById('de_dist2At').value;}
+  addLog(`[도면수정] ${it.pn} ECO:${eco} 수정완료`);
+  saveDB();if(type==='mech')renderMech();else if(type==='pcba')renderPcba();else renderPcb();
+  closeModal('draw-edit');toast(`${it.pn} ECO ${eco} 수정완료`,'success');checkAlerts();
+}
+
+function initMechVendorFilter(){
+  const vendors=[...new Set(PARTS.filter(p=>!['PCBA','PCB'].includes(p.type)).map(p=>p.vendor))].sort();
+  const sel=document.getElementById('mechVendorF');
+  if(sel)sel.innerHTML='<option value="ALL">전체 업체</option>'+vendors.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+function renderMech(){
+  const tb=document.getElementById('mechBody');
+  const vf=document.getElementById('mechVendorF')?.value||'ALL';
+  const df=document.getElementById('mechDistF')?.value||'ALL';
+  const mechParts=PARTS.filter(p=>!['PCBA','PCB'].includes(p.type)&&(vf==='ALL'||p.vendor===vf));
+  let rows='';
+  mechParts.forEach(p=>{
+    const recs=DB.drawing.filter(x=>x.pn===p.pn&&x.type==='mech').sort((a,b)=>b.date.localeCompare(a.date));
+    const latest=recs[0];
+    if(df==='N'&&latest?.distVendor==='Y')return;if(df==='Y'&&latest?.distVendor!=='Y')return;if(df==='NONE'&&latest)return;
+    const isChecked=bulkSelected.has(p.pn);
+    if(!latest){
+      rows+=`<tr data-pn="${p.pn}" class="${isChecked?'selected-row':''}">
+        <td class="check-td"><input type="checkbox" class="mech-part-check part-checkbox" value="${p.pn}" ${isChecked?'checked':''} onchange="onMechCheck('${p.pn}',this.checked)"/></td>
+        <td style="font-family:monospace;font-size:.74rem">${p.pn}</td>
+        <td style="font-size:.77rem">${p.name}</td>
+        <td><span class="badge badge-vendor">${p.vendor}</span></td>
+        <td colspan="4" style="color:#a0aec0;font-size:.77rem">도면 미등록</td>
+        <td><span class="badge badge-gray">📭 도면없음</span></td>
+        <td><button class="btn btn-xs btn-primary" onclick="openDrawModal('mech')">ECO 등록</button></td>
+      </tr>`;return;
+    }
+    const distDone=latest.distVendor==='Y';
+    const distChip=distDone
+      ?`<span class="vendor-chip dist-done">✅ ${p.vendor}<br><span style="font-size:.65rem;font-weight:400">${latest.distVendorAt}</span></span>`
+      :`<span class="vendor-chip dist-pending" onclick="distVendorDone('${latest.id}')">🚨 ${p.vendor} 미배포</span>`;
+    rows+=`<tr data-pn="${p.pn}" class="${!distDone?'row-danger':''} ${isChecked?'selected-row':''}">
+      <td class="check-td"><input type="checkbox" class="mech-part-check part-checkbox" value="${p.pn}" ${isChecked?'checked':''} onchange="onMechCheck('${p.pn}',this.checked)"/></td>
+      <td style="font-family:monospace;font-size:.74rem"><strong>${p.pn}</strong></td>
+      <td style="font-size:.77rem;max-width:130px">${p.name}</td>
+      <td><span class="badge badge-vendor">${p.vendor}</span></td>
+      <td><span class="badge badge-eco">${latest.eco}</span></td>
+      <td style="font-size:.77rem">${latest.date}</td>
+      <td style="font-size:.77rem;max-width:140px">${latest.change}</td>
+      <td>${latest.owner}</td>
+      <td>${distChip}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-xs btn-primary" onclick="openDrawModal('mech')">ECO추가</button>
+        <button class="btn btn-xs btn-warning" onclick="openDrawEdit('${latest.id}')" style="margin-left:2px;color:#fff">수정</button>
+        <button class="btn btn-xs btn-danger" onclick="delDrawing('${latest.id}')" style="margin-left:2px">삭제</button>
+      </td>
+    </tr>`;
+    if(recs.length>1)rows+=`<tr style="background:#f8faff"><td colspan="10"><div style="padding:5px 14px;font-size:.72rem;color:#718096"><strong>📋 이전 ECO:</strong>${recs.slice(1).map(r=>`<span class="badge badge-eco" style="margin-left:5px">${r.eco}</span><span style="color:#a0aec0;margin-left:3px">${r.date}|${r.distVendor==='Y'?'✅':'❌'}</span>`).join('  ')}</div></td></tr>`;
+  });
+  tb.innerHTML=rows||'<tr><td colspan="10" style="text-align:center;color:#a0aec0;padding:16px">해당 데이터 없음</td></tr>';
+}
+function renderPcba(){
+  const tb=document.getElementById('pcbaBody');
+  const pcbaParts=PARTS.filter(p=>p.type==='PCBA');
+  let rows='';
+  pcbaParts.forEach(p=>{
+    const recs=DB.drawing.filter(x=>x.pn===p.pn&&x.type==='pcba').sort((a,b)=>b.date.localeCompare(a.date));
+    const latest=recs[0];const isChecked=pcbaBulkSelected.has(p.pn);
+    if(!latest){rows+=`<tr data-pn="${p.pn}" class="${isChecked?'selected-row':''}"><td class="check-td"><input type="checkbox" class="pcba-part-check part-checkbox" value="${p.pn}" ${isChecked?'checked':''} onchange="onPcbaCheck('${p.pn}',this.checked)"/></td><td style="font-family:monospace;font-size:.74rem">${p.pn}</td><td style="font-size:.77rem">${p.name}</td><td><span class="badge badge-vendor">${p.vendor}</span></td><td colspan="5" style="color:#a0aec0;font-size:.77rem">미등록</td><td colspan="2"></td><td><button class="btn btn-xs btn-primary" onclick="openDrawModal('pcba')">ECO 등록</button></td></tr>`;return;}
+    rows+=`<tr data-pn="${p.pn}" class="${latest.dist1==='N'?'row-danger':''} ${isChecked?'selected-row':''}"><td class="check-td"><input type="checkbox" class="pcba-part-check part-checkbox" value="${p.pn}" ${isChecked?'checked':''} onchange="onPcbaCheck('${p.pn}',this.checked)"/></td><td style="font-family:monospace;font-size:.74rem"><strong>${p.pn}</strong></td><td style="font-size:.77rem;max-width:120px">${p.name}</td><td><span class="badge badge-vendor">${p.vendor}</span></td><td><span class="badge badge-eco">${latest.eco}</span></td><td style="font-size:.77rem">${latest.date}</td><td style="font-size:.77rem;max-width:130px">${latest.change}</td><td>${latest.owner}</td><td>${distBadge(latest.dist1)}</td><td style="font-size:.72rem;color:#a0aec0">${latest.dist1At||'-'}</td><td>${latest.dist1==='Y'?'<span class="badge badge-success">완료</span>':'<span class="badge badge-danger">🚨 미배포</span>'}</td><td style="white-space:nowrap">${latest.dist1==='N'?`<button class="btn btn-xs btn-success" onclick="distFixed('${latest.id}','dist1')">배포완료</button>`:''}<button class="btn btn-xs btn-warning" onclick="openDrawEdit('${latest.id}')" style="margin-left:2px;color:#fff">수정</button><button class="btn btn-xs btn-danger" onclick="delDrawing('${latest.id}')" style="margin-left:2px">삭제</button></td></tr>`;
+  });
+  tb.innerHTML=rows||'<tr><td colspan="12" style="text-align:center;color:#a0aec0;padding:16px">등록된 PCBA 도면 없음</td></tr>';
+}
+function renderPcb(){
+  const tb=document.getElementById('pcbBody');
+  const pcbParts=PARTS.filter(p=>p.type==='PCB');
+  let rows='';
+  pcbParts.forEach(p=>{
+    const recs=DB.drawing.filter(x=>x.pn===p.pn&&x.type==='pcb').sort((a,b)=>b.date.localeCompare(a.date));
+    const latest=recs[0];const isChecked=pcbBulkSelected.has(p.pn);
+    if(!latest){rows+=`<tr data-pn="${p.pn}" class="${isChecked?'selected-row':''}"><td class="check-td"><input type="checkbox" class="pcb-part-check part-checkbox" value="${p.pn}" ${isChecked?'checked':''} onchange="onPcbCheck('${p.pn}',this.checked)"/></td><td style="font-family:monospace;font-size:.74rem">${p.pn}</td><td style="font-size:.77rem">${p.name}</td><td><span class="badge badge-vendor">${p.vendor}</span></td><td colspan="5" style="color:#a0aec0;font-size:.77rem">미등록</td><td colspan="2"></td><td><button class="btn btn-xs btn-primary" onclick="openDrawModal('pcb')">ECO 등록</button></td></tr>`;return;}
+    const allDone=latest.dist1==='Y'&&latest.dist2==='Y';
+    rows+=`<tr data-pn="${p.pn}" class="${!allDone?'row-danger':''} ${isChecked?'selected-row':''}"><td class="check-td"><input type="checkbox" class="pcb-part-check part-checkbox" value="${p.pn}" ${isChecked?'checked':''} onchange="onPcbCheck('${p.pn}',this.checked)"/></td><td style="font-family:monospace;font-size:.74rem"><strong>${p.pn}</strong></td><td style="font-size:.77rem;max-width:110px">${p.name}</td><td><span class="badge badge-vendor">${p.vendor}</span></td><td><span class="badge badge-eco">${latest.eco}</span></td><td style="font-size:.77rem">${latest.date}</td><td style="font-size:.77rem;max-width:110px">${latest.change}</td><td>${latest.owner}</td><td>${distBadge(latest.dist1)}${latest.dist1==='N'?`<br><button class="btn btn-xs btn-success" style="margin-top:2px" onclick="distFixed('${latest.id}','dist1')">배포</button>`:''}</td><td>${distBadge(latest.dist2)}${latest.dist2==='N'?`<br><button class="btn btn-xs btn-success" style="margin-top:2px" onclick="distFixed('${latest.id}','dist2')">배포</button>`:''}</td><td>${allDone?'<span class="badge badge-success">✅ 완료</span>':'<span class="badge badge-danger">🚨 미배포</span>'}</td><td style="white-space:nowrap"><button class="btn btn-xs btn-warning" onclick="openDrawEdit('${latest.id}')" style="color:#fff">수정</button><button class="btn btn-xs btn-danger" onclick="delDrawing('${latest.id}')" style="margin-left:2px">삭제</button></td></tr>`;
+  });
+  tb.innerHTML=rows||'<tr><td colspan="12" style="text-align:center;color:#a0aec0;padding:16px">등록된 PCB 거버 없음</td></tr>';
+}
+
+// ════════════════════════════════════════
+// DELIVERY
+// ════════════════════════════════════════
+let dvBulkSelected=new Set();
+function updateDvBulkBar(){document.getElementById('dvBulkCount').textContent=dvBulkSelected.size;}
+function onDvBulkCheck(pn,checked){if(checked)dvBulkSelected.add(pn);else dvBulkSelected.delete(pn);updateDvBulkBar();const cb=document.querySelector(`#dvBulkPartList input[value="${CSS.escape(pn)}"]`);if(cb)cb.checked=checked;const item=document.querySelector(`#dvBulkPartList .part-select-item[data-pn="${pn}"]`);if(item)item.classList.toggle('selected',checked);}
+function renderDvBulkPartList(){
+  const q=(document.getElementById('dvBulkSearch')?.value||'').toLowerCase();
+  const container=document.getElementById('dvBulkPartList');if(!container)return;
+  const filtered=PARTS.filter(p=>!q||(p.pn.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.vendor.toLowerCase().includes(q)));
+  container.innerHTML=filtered.length?filtered.map(p=>{const checked=dvBulkSelected.has(p.pn);const reg=DB.delivery.find(x=>x.pn===p.pn);return `<div class="part-select-item${checked?' selected':''}" data-pn="${p.pn}" onclick="onDvBulkCheck('${p.pn}',!dvBulkSelected.has('${p.pn}'))"><input type="checkbox" value="${p.pn}" ${checked?'checked':''} onclick="event.stopPropagation();onDvBulkCheck('${p.pn}',this.checked)"/><span style="font-family:monospace;font-size:.74rem;color:var(--primary)">${p.pn}</span><span style="font-size:.77rem;flex:1">${p.name}</span><span class="badge badge-gray" style="font-size:.68rem">${p.vendor}</span>${reg?'<span class="badge badge-info" style="font-size:.66rem">등록됨</span>':''}</div>`;}).join(''):'<div style="padding:12px;color:#a0aec0;font-size:.8rem;text-align:center">해당 품번 없음</div>';
+}
+function dvBulkSelectAll(){PARTS.forEach(p=>onDvBulkCheck(p.pn,true));renderDvBulkPartList();}
+function dvBulkSelectNone(){dvBulkSelected.clear();updateDvBulkBar();renderDvBulkPartList();}
+function dvBulkSelectUnreg(){dvBulkSelectNone();const reg=new Set(DB.delivery.map(x=>x.pn));PARTS.filter(p=>!reg.has(p.pn)).forEach(p=>onDvBulkCheck(p.pn,true));renderDvBulkPartList();}
+function executeDvBulk(){
+  const order=document.getElementById('dv_bulk_order').value;const orderQty=parseInt(document.getElementById('dv_bulk_orderQty').value)||0;
+  const target=document.getElementById('dv_bulk_target').value;const status=document.getElementById('dv_bulk_status').value;
+  if(!target||!orderQty){alert('발주수량과 목표입고일은 필수입니다.');return;}
+  if(dvBulkSelected.size===0){alert('품번을 먼저 선택해주세요.');return;}
+  if(!confirm(`총 ${dvBulkSelected.size}개 품번에 납기 정보를 일괄 등록하시겠습니까?`))return;
+  let cnt=0;dvBulkSelected.forEach(pn=>{const part=PART_MAP[pn];if(!part)return;const ex=DB.delivery.findIndex(x=>x.pn===pn);const item={id:uid(),pn,pname:part.name,vendor:part.vendor,order,orderQty,target,inQty:0,actual:'',status,note:'',updAt:nowStr()};if(ex>=0)DB.delivery[ex]=item;else DB.delivery.push(item);cnt++;});
+  addLog(`[납기일괄] ${cnt}개 품번 납기정보 일괄 등록 목표:${target}`);
+  saveDB();dvBulkSelected.clear();updateDvBulkBar();renderDelivery();renderDvBulkPartList();
+  toast(`✅ ${cnt}개 품번 납기정보 일괄 등록완료`,'success');checkAlerts();
+}
+function openDeliveryModal(editId){
+  document.getElementById('dv_editId').value=editId||'';
+  populatePnSelect('dv_pn','all');
+  ['dv_vendor','dv_pname','dv_order','dv_orderQty','dv_target','dv_inQty','dv_actual','dv_note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dv_status').value='pending';
+  if(editId){const it=DB.delivery.find(x=>x.id===editId);if(it){document.getElementById('dv_pn').value=it.pn;autoFillDv();['order','orderQty','target','inQty','actual'].forEach(f=>document.getElementById('dv_'+f).value=it[f]||'');document.getElementById('dv_status').value=it.status||'pending';document.getElementById('dv_note').value=it.note||'';}}
+  document.getElementById('modal-delivery').classList.add('show');
+}
+function autoFillDv(){const pn=document.getElementById('dv_pn').value;const part=PART_MAP[pn];document.getElementById('dv_vendor').value=part?.vendor||'';document.getElementById('dv_pname').value=part?.name||'';}
+function saveDelivery(){
+  const editId=document.getElementById('dv_editId').value;const pn=document.getElementById('dv_pn').value;const pname=document.getElementById('dv_pname').value;const vendor=document.getElementById('dv_vendor').value;
+  const order=document.getElementById('dv_order').value;const orderQty=parseInt(document.getElementById('dv_orderQty').value)||0;const target=document.getElementById('dv_target').value;const inQty=parseInt(document.getElementById('dv_inQty').value)||0;const actual=document.getElementById('dv_actual').value;const status=document.getElementById('dv_status').value;const note=document.getElementById('dv_note').value.trim();
+  if(!pn||!target){alert('품번, 목표입고일을 입력해주세요.');return;}
+  const item={id:editId||uid(),pn,pname,vendor,order,orderQty,target,inQty,actual,status,note,updAt:nowStr()};
+  if(editId){const idx=DB.delivery.findIndex(x=>x.id===editId);if(idx>=0)DB.delivery[idx]=item;}else DB.delivery.push(item);
+  addLog(`[납기] ${pn}(${vendor}) 발주:${orderQty} 입고:${inQty} 목표:${target}`);
+  saveDB();renderDelivery();closeModal('delivery');toast(`${pn} 납기정보 저장`,'success');checkAlerts();
+}
+function delDelivery(id){if(!confirm('삭제?'))return;DB.delivery=DB.delivery.filter(x=>x.id!==id);saveDB();renderDelivery();}
+function renderDelivery(){
+  const q=(document.getElementById('dvSearch')?.value||'').toLowerCase();const sf=document.getElementById('dvStatusF')?.value||'ALL';const tb=document.getElementById('deliveryBody');
+  let filtered=DB.delivery.filter(x=>{if(sf!=='ALL'&&x.status!==sf)return false;if(q&&!x.pn.toLowerCase().includes(q)&&!(x.pname||'').toLowerCase().includes(q)&&!(x.vendor||'').toLowerCase().includes(q))return false;return true;});
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="13" style="text-align:center;color:#a0aec0;padding:20px">등록된 입고정보 없음</td></tr>';return;}
+  const byVendor={};filtered.forEach(x=>{if(!byVendor[x.vendor])byVendor[x.vendor]=[];byVendor[x.vendor].push(x);});
+  let rows='';
+  Object.entries(byVendor).forEach(([vendor,items])=>{
+    rows+=`<tr class="part-group-header"><td colspan="13">🏭 ${vendor} (${items.length}개 품번)</td></tr>`;
+    items.forEach(it=>{const remain=Math.max(0,(it.orderQty||0)-(it.inQty||0));const pct=it.orderQty>0?Math.round(it.inQty/it.orderQty*100):0;const qClass=pct>=100?'qty-ok':pct>0?'qty-partial':'qty-zero';const rowCls=it.status==='delay'?'row-danger':it.status==='partial'?'row-warning':it.status==='done'?'row-success':'';
+      rows+=`<tr class="${rowCls}"><td style="font-family:monospace;font-size:.73rem">${it.pn}</td><td style="font-size:.77rem;max-width:110px">${it.pname}</td><td>${it.vendor}</td><td style="font-size:.77rem">${it.order||'-'}</td><td class="qty-cell">${it.orderQty||'-'}</td><td style="font-size:.77rem">${it.target}</td><td>${dDay(it.target,it.status)}</td><td class="qty-cell ${qClass}">${it.inQty||0}</td><td class="qty-cell ${remain>0?'qty-zero':''}">${remain}</td><td><div style="display:flex;align-items:center;gap:4px"><div class="prog-bar" style="width:50px;display:inline-block"><div class="prog-fill ${pct<50?'danger':pct<100?'warn':''}" style="width:${Math.min(pct,100)}%"></div></div><span style="font-size:.71rem;color:#718096">${pct}%</span></div></td><td>${dvBadge(it.status)}</td><td style="font-size:.74rem;color:#718096;max-width:90px">${it.note||'-'}</td><td style="white-space:nowrap"><button class="btn btn-xs btn-primary" onclick="openDeliveryModal('${it.id}')">수정</button><button class="btn btn-xs btn-danger" onclick="delDelivery('${it.id}')" style="margin-left:2px">삭제</button></td></tr>`;
+    });
+  });
+  tb.innerHTML=rows;
+}
+
+// DIMENSION
+function openDimModal(editId){
+  document.getElementById('dm_editId').value=editId||'';populatePnSelect('dm_pn','all');
+  ['dm_vendor','dm_pname','dm_eco','dm_fail'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dm_date').value=today();document.getElementById('dm_result').value='pending';document.getElementById('dm_action').value='';document.getElementById('dm_recheck').value='';
+  if(editId){const it=DB.dimension.find(x=>x.id===editId);if(it){document.getElementById('dm_pn').value=it.pn;autoFillDm();document.getElementById('dm_eco').value=it.eco||'';document.getElementById('dm_date').value=it.date||today();document.getElementById('dm_result').value=it.result||'pending';document.getElementById('dm_fail').value=it.fail||'';document.getElementById('dm_action').value=it.action||'';document.getElementById('dm_recheck').value=it.recheck||'';}}
+  document.getElementById('modal-dimension').classList.add('show');
+}
+function autoFillDm(){const pn=document.getElementById('dm_pn').value;const part=PART_MAP[pn];document.getElementById('dm_vendor').value=part?.vendor||'';document.getElementById('dm_pname').value=part?.name||'';const dwType=part?.type==='PCBA'?'pcba':part?.type==='PCB'?'pcb':'mech';const latest=getLatestDrawing(pn,dwType);if(latest)document.getElementById('dm_eco').value=latest.eco;}
+function saveDimension(){
+  const editId=document.getElementById('dm_editId').value;const pn=document.getElementById('dm_pn').value;const pname=document.getElementById('dm_pname').value;const vendor=document.getElementById('dm_vendor').value;const eco=document.getElementById('dm_eco').value.trim();const date=document.getElementById('dm_date').value;const result=document.getElementById('dm_result').value;const fail=document.getElementById('dm_fail').value.trim();const action=document.getElementById('dm_action').value;const recheck=document.getElementById('dm_recheck').value;
+  if(!pn||!eco||!date){alert('품번, 기준 ECO, 검사일은 필수입니다.');return;}
+  const item={id:editId||uid(),pn,pname,vendor,eco,date,result,fail,action,recheck,updAt:nowStr()};
+  if(editId){const idx=DB.dimension.findIndex(x=>x.id===editId);if(idx>=0)DB.dimension[idx]=item;}else DB.dimension.push(item);
+  addLog(`[전치수] ${pn}(${vendor}) ECO:${eco} 결과:${result}`);
+  saveDB();renderDimension();closeModal('dimension');toast(`${pn} 전치수 저장`,'success');checkAlerts();
+}
+function delDimension(id){if(!confirm('삭제?'))return;DB.dimension=DB.dimension.filter(x=>x.id!==id);saveDB();renderDimension();}
+function renderDimension(){
+  const q=(document.getElementById('dmSearch')?.value||'').toLowerCase();const rf=document.getElementById('dmResultF')?.value||'ALL';const tb=document.getElementById('dimensionBody');
+  const aMap={rework:'🔧 재작업',reorder:'🔄 재발주',special:'⚠️ 특채',none:'-','':'-'};
+  let rows='';
+  DB.dimension.filter(x=>{if(rf!=='ALL'&&x.result!==rf)return false;if(q&&!x.pn.toLowerCase().includes(q)&&!(x.pname||'').toLowerCase().includes(q)&&!(x.vendor||'').toLowerCase().includes(q))return false;return true;}).forEach(it=>{
+    const rowCls=it.result==='fail'?'row-danger':it.result==='checking'?'row-warning':it.result==='pass'?'row-success':'';
+    rows+=`<tr class="${rowCls}"><td style="font-family:monospace;font-size:.73rem">${it.pn}</td><td style="font-size:.77rem;max-width:110px">${it.pname}</td><td>${it.vendor}</td><td><span class="badge badge-eco">${it.eco}</span></td><td style="font-size:.77rem">${it.date}</td><td>${dimBadge(it.result)}</td><td style="font-size:.74rem;color:#c53030;max-width:100px">${it.fail||'-'}</td><td style="font-size:.74rem">${aMap[it.action]||'-'}</td><td style="font-size:.74rem">${it.recheck||'-'}</td><td style="white-space:nowrap"><button class="btn btn-xs btn-primary" onclick="openDimModal('${it.id}')">수정</button><button class="btn btn-xs btn-danger" onclick="delDimension('${it.id}')" style="margin-left:2px">삭제</button></td></tr>`;
+  });
+  if(rf==='ALL'||rf==='pending'){const regPns=new Set(DB.dimension.map(x=>x.pn));PARTS.filter(p=>!regPns.has(p.pn)&&(!q||(p.pn.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.vendor.toLowerCase().includes(q)))).forEach(p=>{rows+=`<tr><td style="font-family:monospace;font-size:.73rem">${p.pn}</td><td style="font-size:.77rem">${p.name}</td><td>${p.vendor}</td><td colspan="5" style="color:#a0aec0;font-size:.76rem">전치수 미등록</td><td><button class="btn btn-xs btn-primary" onclick="openDimModal()">등록</button></td></tr>`;});}
+  tb.innerHTML=rows||'<tr><td colspan="10" style="text-align:center;color:#a0aec0;padding:16px">데이터 없음</td></tr>';
+}
+
+// SCHEDULE
+let scBulkSelected=new Set();
+function onScBulkCheck(pn,checked){if(checked)scBulkSelected.add(pn);else scBulkSelected.delete(pn);document.getElementById('scBulkCount').textContent=scBulkSelected.size;const cb=document.querySelector(`#scBulkPartList input[value="${CSS.escape(pn)}"]`);if(cb)cb.checked=checked;const item=document.querySelector(`#scBulkPartList .part-select-item[data-pn="${pn}"]`);if(item)item.classList.toggle('selected',checked);}
+function renderScBulkPartList(){
+  const q=(document.getElementById('scBulkSearch')?.value||'').toLowerCase();const container=document.getElementById('scBulkPartList');if(!container)return;
+  const filtered=PARTS.filter(p=>!q||(p.pn.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.vendor.toLowerCase().includes(q)));
+  container.innerHTML=filtered.length?filtered.map(p=>{const checked=scBulkSelected.has(p.pn);const reg=DB.schedule.find(x=>x.pn===p.pn);return `<div class="part-select-item${checked?' selected':''}" data-pn="${p.pn}" onclick="onScBulkCheck('${p.pn}',!scBulkSelected.has('${p.pn}'))"><input type="checkbox" value="${p.pn}" ${checked?'checked':''} onclick="event.stopPropagation();onScBulkCheck('${p.pn}',this.checked)"/><span style="font-family:monospace;font-size:.74rem;color:var(--primary)">${p.pn}</span><span style="font-size:.77rem;flex:1">${p.name}</span><span class="badge badge-gray" style="font-size:.68rem">${p.vendor}</span>${reg?stageBadge(reg.stage):''}</div>`;}).join(''):'<div style="padding:12px;color:#a0aec0;font-size:.8rem;text-align:center">해당 품번 없음</div>';
+}
+function scBulkSelectAll(){PARTS.forEach(p=>onScBulkCheck(p.pn,true));renderScBulkPartList();}
+function scBulkSelectNone(){scBulkSelected.clear();document.getElementById('scBulkCount').textContent=0;renderScBulkPartList();}
+function scBulkSelectUnreg(){scBulkSelectNone();const reg=new Set(DB.schedule.map(x=>x.pn));PARTS.filter(p=>!reg.has(p.pn)).forEach(p=>onScBulkCheck(p.pn,true));renderScBulkPartList();}
+function executeScBulk(){
+  const stage=document.getElementById('sc_bulk_stage').value;const date=document.getElementById('sc_bulk_date').value;const qty=document.getElementById('sc_bulk_qty').value.trim();const owner=document.getElementById('sc_bulk_owner').value.trim();const comment=document.getElementById('sc_bulk_comment').value.trim();
+  if(!date){alert('대응 가능일은 필수입니다.');return;}if(scBulkSelected.size===0){alert('품번을 먼저 선택해주세요.');return;}
+  if(!confirm(`총 ${scBulkSelected.size}개 품번에 대응 일정을 일괄 등록하시겠습니까?`))return;
+  let cnt=0;scBulkSelected.forEach(pn=>{const part=PART_MAP[pn];if(!part)return;const ex=DB.schedule.findIndex(x=>x.pn===pn);const item={id:uid(),pn,pname:part.name,vendor:part.vendor,stage,date,qty,owner,comment,updAt:nowStr()};if(ex>=0)DB.schedule[ex]=item;else DB.schedule.push(item);cnt++;});
+  addLog(`[일정일괄] ${cnt}개 품번 대응일정 일괄 등록 단계:${stage}`);
+  saveDB();scBulkSelected.clear();document.getElementById('scBulkCount').textContent=0;renderSchedule();renderScBulkPartList();
+  toast(`✅ ${cnt}개 품번 대응일정 일괄 등록완료`,'success');
+}
+function openSchedModal(editId){
+  document.getElementById('sc_editId').value=editId||'';populatePnSelect('sc_pn','all');
+  ['sc_vendor','sc_pname','sc_qty','sc_owner','sc_comment'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('sc_date').value=today();document.getElementById('sc_stage').value='도면검토';
+  if(editId){const it=DB.schedule.find(x=>x.id===editId);if(it){document.getElementById('sc_pn').value=it.pn;autoFillSc();document.getElementById('sc_stage').value=it.stage||'도면검토';document.getElementById('sc_date').value=it.date||today();document.getElementById('sc_qty').value=it.qty||'';document.getElementById('sc_owner').value=it.owner||'';document.getElementById('sc_comment').value=it.comment||'';}}
+  document.getElementById('modal-schedule').classList.add('show');
+}
+function autoFillSc(){const pn=document.getElementById('sc_pn').value;const part=PART_MAP[pn];document.getElementById('sc_vendor').value=part?.vendor||'';document.getElementById('sc_pname').value=part?.name||'';}
+function saveSchedule(){
+  const editId=document.getElementById('sc_editId').value;const pn=document.getElementById('sc_pn').value;const pname=document.getElementById('sc_pname').value;const vendor=document.getElementById('sc_vendor').value;const stage=document.getElementById('sc_stage').value;const date=document.getElementById('sc_date').value;const qty=document.getElementById('sc_qty').value.trim();const owner=document.getElementById('sc_owner').value.trim();const comment=document.getElementById('sc_comment').value.trim();
+  if(!pn||!date){alert('품번, 대응가능일을 입력해주세요.');return;}
+  const item={id:editId||uid(),pn,pname,vendor,stage,date,qty,owner,comment,updAt:nowStr()};
+  if(editId){const idx=DB.schedule.findIndex(x=>x.id===editId);if(idx>=0)DB.schedule[idx]=item;}else DB.schedule.push(item);
+  addLog(`[일정] ${pn}(${vendor}) 단계:${stage} 대응가능:${date}`);
+  saveDB();renderSchedule();closeModal('schedule');toast(`${pn} 일정 저장`,'success');
+}
+function delSchedule(id){if(!confirm('삭제?'))return;DB.schedule=DB.schedule.filter(x=>x.id!==id);saveDB();renderSchedule();}
+function renderSchedule(){
+  const q=(document.getElementById('scSearch')?.value||'').toLowerCase();const sf=document.getElementById('scStageF')?.value||'ALL';const tb=document.getElementById('scheduleBody');
+  const allParts=PARTS;
+  let filtered=DB.schedule.filter(x=>{if(sf!=='ALL'&&x.stage!==sf)return false;if(q&&!x.pn.toLowerCase().includes(q)&&!(x.pname||'').toLowerCase().includes(q)&&!(x.vendor||'').toLowerCase().includes(q))return false;return true;});
+  let rows='';
+  const byVendor={};filtered.forEach(x=>{if(!byVendor[x.vendor])byVendor[x.vendor]=[];byVendor[x.vendor].push(x);});
+  Object.entries(byVendor).forEach(([vendor,items])=>{
+    rows+=`<tr class="part-group-header"><td colspan="10">🏭 ${vendor} (${items.length}개 품번)</td></tr>`;
+    items.forEach(it=>{rows+=`<tr><td style="font-family:monospace;font-size:.73rem">${it.pn}</td><td style="font-size:.77rem;max-width:110px">${it.pname}</td><td>${it.vendor}</td><td>${stageBadge(it.stage)}</td><td style="font-size:.77rem">${it.date}</td><td>${dDay(it.date,it.stage)}</td><td style="font-size:.77rem">${it.qty||'-'}</td><td style="font-size:.74rem;color:#718096;max-width:110px">${it.comment||'-'}</td><td style="font-size:.72rem;color:#a0aec0">${it.updAt}</td><td style="white-space:nowrap"><button class="btn btn-xs btn-primary" onclick="openSchedModal('${it.id}')">수정</button><button class="btn btn-xs btn-danger" onclick="delSchedule('${it.id}')" style="margin-left:2px">삭제</button></td></tr>`;});
+  });
+  if(sf==='ALL'){const regPns=new Set(DB.schedule.map(x=>x.pn));allParts.filter(p=>!regPns.has(p.pn)&&(!q||(p.pn.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.vendor.toLowerCase().includes(q)))).forEach(p=>{rows+=`<tr><td style="font-family:monospace;font-size:.73rem">${p.pn}</td><td style="font-size:.77rem">${p.name}</td><td>${p.vendor}</td><td colspan="5" style="color:#a0aec0;font-size:.76rem">일정 미등록</td><td><button class="btn btn-xs btn-primary" onclick="openSchedModal()">등록</button></td></tr>`;});}
+  tb.innerHTML=rows||'<tr><td colspan="10" style="text-align:center;color:#a0aec0;padding:16px">데이터 없음</td></tr>';
+}
+
+// PARTS filters
+function initPartFilters(){
+  const vendors=[...new Set(PARTS.map(p=>p.vendor))].sort();const types=[...new Set(PARTS.map(p=>p.type))].sort();
+  document.getElementById('partVendorF').innerHTML='<option value="ALL">전체 업체</option>'+vendors.map(v=>`<option value="${v}">${v}</option>`).join('');
+  document.getElementById('partTypeF').innerHTML='<option value="ALL">전체 구분</option>'+types.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+// VENDOR INFO
+function renderVendorInfo(){
+  const q=(document.getElementById('vendorSearch')?.value||'').toLowerCase();
+  const vendors=[...new Set(PARTS.map(p=>p.vendor))].sort();
+  document.getElementById('vendorInfoGrid').innerHTML=vendors.filter(v=>!q||v.toLowerCase().includes(q)).map(v=>{
+    const vParts=PARTS.filter(p=>p.vendor===v);const dvs=DB.delivery.filter(x=>x.vendor===v);const dms=DB.dimension.filter(x=>x.vendor===v);const ecos=(DB.eco||[]).filter(e=>e.vendor===v);
+    const hasDelay=dvs.some(x=>x.status==='delay');const hasFail=dms.some(x=>x.result==='fail');const openEco=ecos.filter(e=>e.status==='open').length;
+    const drawPending=vParts.filter(p=>{const dwType=p.type==='PCBA'?'pcba':p.type==='PCB'?'pcb':'mech';const lat=getLatestDrawing(p.pn,dwType);if(!lat)return false;if(dwType==='mech')return lat.distVendor==='N';if(dwType==='pcb')return lat.dist1==='N'||lat.dist2==='N';return lat.dist1==='N';}).length;
+    const cs=hasDelay||hasFail?'status-danger':drawPending>0||openEco>0?'status-warn':'';
+    return `<div class="vendor-card ${cs}"><h3>${v}</h3><div class="vc-sub">${[...new Set(vParts.map(p=>p.type))].join(', ')} · ${vParts.length}종</div>
+      <div class="vc-row"><span>📐 도면 미배포</span><span>${drawPending>0?`<span class="badge badge-danger">${drawPending}건</span>`:'<span class="badge badge-success">없음</span>'}</span></div>
+      <div class="vc-row"><span>🔄 진행중 ECO</span><span>${openEco>0?`<span class="badge badge-danger">${openEco}건</span>`:'<span class="badge badge-success">없음</span>'}</span></div>
+      <div class="vc-row"><span>📦 입고</span><span>${dvs.length}/${vParts.length}</span></div>
+      <div class="vc-row"><span>📏 전치수</span><span>${dms.filter(x=>x.result==='pass').length}✅${dms.filter(x=>x.result==='fail').length?` ${dms.filter(x=>x.result==='fail').length}❌`:''}</span></div>
+      ${hasDelay?'<div style="margin-top:5px"><span class="badge badge-danger">🚨 납기지연</span></div>':''}
+      ${hasFail?'<div style="margin-top:4px"><span class="badge badge-danger">❌ 전치수불만족</span></div>':''}
+    </div>`;
+  }).join('');
+}
+
+// DASHBOARD
+function renderDashboard(){
+  const bomP=DB.bom.filter(x=>x.dist==='N').length;
+  const mechP=DB.drawing.filter(x=>x.type==='mech'&&x.distVendor==='N').length;
+  const pcbaP=DB.drawing.filter(x=>x.type==='pcba'&&x.dist1==='N').length;
+  const pcbP=DB.drawing.filter(x=>x.type==='pcb'&&(x.dist1==='N'||x.dist2==='N')).length;
+  const totalDoc=bomP+mechP+pcbaP+pcbP;
+  const delayP=DB.delivery.filter(x=>x.status==='delay').length;
+  const dimF=DB.dimension.filter(x=>x.result==='fail').length;
+  const riskParts=PARTS.filter(p=>p.summary==='문제 가능').length;
+  const openEco=(DB.eco||[]).filter(e=>e.status==='open').length;
+  const soon=DB.delivery.filter(x=>{if(x.status==='done')return false;if(!x.target||x.target==='기입고 完')return false;return Math.ceil((new Date(x.target)-new Date())/864e5)<=3;}).length;
+  document.getElementById('dashStats').innerHTML=`
+    <div class="stat-card danger"><h4>🚨 미배포 문서</h4><p>${totalDoc}</p></div>
+    <div class="stat-card warning"><h4>⚠️ 문제 가능 부품</h4><p>${riskParts}</p></div>
+    <div class="stat-card danger"><h4>🔄 진행중 ECO</h4><p>${openEco}</p></div>
+    <div class="stat-card danger"><h4>🚨 납기 지연</h4><p>${delayP}</p></div>
+    <div class="stat-card danger"><h4>❌ 전치수 불만족</h4><p>${dimF}</p></div>
+    <div class="stat-card warning"><h4>⚠️ D-3 이내 입고</h4><p>${soon}</p></div>
+    <div class="stat-card success"><h4>✅ 총 관리 부품</h4><p>${PARTS.length}</p></div>
+    <div class="stat-card success"><h4>✅ 입고완료</h4><p>${DB.delivery.filter(x=>x.status==='done').length}</p></div>
+  `;
+  const urgent=[];
+  DB.bom.filter(x=>x.dist==='N').forEach(x=>urgent.push({icon:'📄',msg:`BOM ${x.rev} → THREEB 미배포`,t:'danger'}));
+  DB.drawing.filter(x=>x.type==='mech'&&x.distVendor==='N').forEach(x=>urgent.push({icon:'📐',msg:`기구물도면 ${x.pn} ECO:${x.eco} → ${x.vendor} 미배포`,t:'danger'}));
+  DB.drawing.filter(x=>x.type==='pcba'&&x.dist1==='N').forEach(x=>urgent.push({icon:'🔌',msg:`PCBA도면 ${x.pn} ECO:${x.eco} → THREEB 미배포`,t:'danger'}));
+  DB.drawing.filter(x=>x.type==='pcb'&&(x.dist1==='N'||x.dist2==='N')).forEach(x=>urgent.push({icon:'🟢',msg:`PCB거버 ${x.pn} ECO:${x.eco} 미배포`,t:'danger'}));
+  DB.delivery.filter(x=>x.status==='delay').forEach(x=>urgent.push({icon:'🚚',msg:`${x.pn}(${x.vendor}) 납기지연`,t:'danger'}));
+  DB.dimension.filter(x=>x.result==='fail').forEach(x=>urgent.push({icon:'📏',msg:`${x.pn}(${x.vendor}) 전치수 불만족`,t:'danger'}));
+  (DB.eco||[]).filter(e=>e.status==='open').forEach(e=>urgent.push({icon:'🔄',msg:`ECO 진행중 [${e.ecoNum}] ${e.pn}(${e.vendor}) — ${e.type}: ${e.change.slice(0,30)}…`,t:'warning'}));
+  PARTS.filter(p=>p.summary==='문제 가능').forEach(p=>urgent.push({icon:'⚠️',msg:`${p.pn} ${p.name}(${p.vendor}) — ${p.note||'문제 가능'}`,t:'warning'}));
+  DB.delivery.filter(x=>{if(x.status==='done')return false;if(!x.target||x.target==='기입고 完')return false;const d=Math.ceil((new Date(x.target)-new Date())/864e5);return d>=0&&d<=3;}).forEach(x=>{const d=Math.ceil((new Date(x.target)-new Date())/864e5);urgent.push({icon:'📦',msg:`${x.pn}(${x.vendor}) 입고 D-${d} 임박 (${x.target})`,t:'warning'});});
+  document.getElementById('urgentList').innerHTML=urgent.length
+    ?urgent.map(u=>`<div style="display:flex;align-items:center;gap:9px;padding:9px 13px;margin-bottom:7px;border-radius:8px;border-left:4px solid ${u.t==='danger'?'var(--danger)':'var(--warning)'};background:${u.t==='danger'?'#fff5f5':'#fffff0'}"><span>${u.icon}</span><span style="font-size:.83rem;font-weight:600;color:${u.t==='danger'?'var(--danger)':'#b7791f'}">${u.msg}</span></div>`).join('')
+    :'<div style="text-align:center;color:#38a169;padding:18px;font-size:.88rem">✅ 즉시 조치 필요한 항목이 없습니다!</div>';
+  const vendors=[...new Set(PARTS.map(p=>p.vendor))].sort();
+  document.getElementById('vendorGrid').innerHTML=vendors.map(v=>{
+    const vParts=PARTS.filter(p=>p.vendor===v);const dvs=DB.delivery.filter(x=>x.vendor===v);const dms=DB.dimension.filter(x=>x.vendor===v);const ecos=(DB.eco||[]).filter(e=>e.vendor===v&&e.status==='open');
+    const hasDelay=dvs.some(x=>x.status==='delay');const hasFail=dms.some(x=>x.result==='fail');
+    const drawPending=vParts.filter(p=>{const dwType=p.type==='PCBA'?'pcba':p.type==='PCB'?'pcb':'mech';const lat=getLatestDrawing(p.pn,dwType);if(!lat)return false;if(dwType==='mech')return lat.distVendor==='N';if(dwType==='pcb')return lat.dist1==='N'||lat.dist2==='N';return lat.dist1==='N';}).length;
+    const cs=hasDelay||hasFail?'status-danger':drawPending>0||ecos.length>0?'status-warn':'';
+    return `<div class="vendor-card ${cs}"><h3>${v}</h3><div class="vc-sub">${vParts.length}개 품번 담당</div>
+      <div class="vc-row"><span>📐 도면 미배포</span><span>${drawPending>0?`<span class="badge badge-danger">${drawPending}건</span>`:'<span class="badge badge-success">없음</span>'}</span></div>
+      <div class="vc-row"><span>🔄 진행중 ECO</span><span>${ecos.length>0?`<span class="badge badge-warning">${ecos.length}건</span>`:'<span class="badge badge-success">없음</span>'}</span></div>
+      <div class="vc-row"><span>📦 입고</span><span>${dvs.length}/${vParts.length}</span></div>
+      <div class="vc-row"><span>📏 전치수</span><span>${dms.filter(x=>x.result==='pass').length}✅${dms.filter(x=>x.result==='fail').length>0?' '+dms.filter(x=>x.result==='fail').length+'❌':''}</span></div>
+    </div>`;
+  }).join('');
+  const tot=totalDoc+delayP+dimF;const nb=document.getElementById('nb-dash');nb.style.display=tot?'inline-block':'none';if(tot)nb.textContent=tot;
+}
+
+function checkAlerts(){
+  const bomP=DB.bom.filter(x=>x.dist==='N').length;const mechP=DB.drawing.filter(x=>x.type==='mech'&&x.distVendor==='N').length;const pcbaP=DB.drawing.filter(x=>x.type==='pcba'&&x.dist1==='N').length;const pcbP=DB.drawing.filter(x=>x.type==='pcb'&&(x.dist1==='N'||x.dist2==='N')).length;const delayP=DB.delivery.filter(x=>x.status==='delay').length;const dimF=DB.dimension.filter(x=>x.result==='fail').length;
+  const msgs=[];
+  if(bomP+mechP+pcbaP+pcbP>0)msgs.push(`미배포 ${bomP+mechP+pcbaP+pcbP}건`);if(delayP>0)msgs.push(`납기지연 ${delayP}건`);if(dimF>0)msgs.push(`전치수불만족 ${dimF}건`);
+  const b=document.getElementById('alertBanner');if(msgs.length){b.className='show';document.getElementById('alertMsg').textContent='즉시확인: '+msgs.join(' | ');}else b.className='';
+}
+
+// 부품 관리
+let extraParts=JSON.parse(localStorage.getItem('he_iccu_extraParts')||'[]');
+function saveExtraParts(){localStorage.setItem('he_iccu_extraParts',JSON.stringify(extraParts));}
+function mergeExtraParts(){
+  const existPns=new Set(PARTS.map(p=>p.pn));
+  extraParts.forEach(ep=>{
+    if(!existPns.has(ep.pn)){
+      const np={proj:'HE ICCU',pn:ep.pn,name:ep.name,vendor:ep.vendor,type:ep.type,incoterms:'',origin:ep.country||'',p1_in:'',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''};
+      PARTS.push(np);existPns.add(ep.pn);PART_MAP[ep.pn]=np;
+    }
+  });
+}
+function addExtraPart(){
+  const pn=document.getElementById('pm_pn').value.trim();const name=document.getElementById('pm_name').value.trim();
+  const type=document.getElementById('pm_type').value;const vendor=document.getElementById('pm_vendor').value.trim();const country=document.getElementById('pm_country').value;
+  if(!pn||!name||!vendor){alert('품번, 품명, 선정업체는 필수입니다.');return;}
+  const allPns=new Set(PARTS.map(p=>p.pn));
+  if(allPns.has(pn)){if(!confirm(`품번 [${pn}]이 이미 존재합니다. 덮어쓰시겠습니까?`))return;extraParts=extraParts.filter(ep=>ep.pn!==pn);}
+  const newPart={pn,name,type,vendor,country,addedAt:nowStr()};extraParts.push(newPart);saveExtraParts();
+  const partObj={proj:'HE ICCU',pn,name,vendor,type,incoterms:'',origin:country,p1_in:'',dim_ok:'',all_tool:'',pv_eco:'',pv_add:'',summary:'',note:''};
+  const idx=PARTS.findIndex(p=>p.pn===pn);if(idx>=0)PARTS[idx]=partObj;else{PARTS.push(partObj);PART_MAP[pn]=partObj;}
+  addLog(`[부품추가] ${pn} | ${name} | ${vendor}`);renderExtraPartList();initPartFilters();initMechVendorFilter();initEcoFilters();
+  toast(`✅ [${pn}] ${name} 등록완료`,'success');
+  ['pm_pn','pm_name'].forEach(id=>document.getElementById(id).value='');
+}
+function delExtraPart(pn){if(!confirm(`[${pn}] 부품을 삭제하시겠습니까?`))return;extraParts=extraParts.filter(p=>p.pn!==pn);saveExtraParts();const idx=PARTS.findIndex(p=>p.pn===pn);if(idx>=0)PARTS.splice(idx,1);delete PART_MAP[pn];addLog(`[부품삭제] ${pn}`);renderExtraPartList();initPartFilters();initMechVendorFilter();toast(`[${pn}] 삭제완료`,'success');}
+function clearAllExtraParts(){if(!extraParts.length){alert('삭제할 추가 부품이 없습니다.');return;}if(!confirm(`추가 등록된 부품 ${extraParts.length}개를 모두 삭제하시겠습니까?`))return;const pnsToRemove=new Set(extraParts.map(p=>p.pn));extraParts=[];saveExtraParts();for(let i=PARTS.length-1;i>=0;i--){if(pnsToRemove.has(PARTS[i].pn)){delete PART_MAP[PARTS[i].pn];PARTS.splice(i,1);}}addLog(`[부품전체삭제] ${pnsToRemove.size}개 삭제`);renderExtraPartList();initPartFilters();initMechVendorFilter();toast('추가 부품 전체 삭제완료','success');}
+function renderExtraPartList(){
+  const tb=document.getElementById('extraPartBody');const cnt=document.getElementById('extraPartCount');
+  if(!extraParts.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#a0aec0;padding:20px">추가 등록된 부품이 없습니다</td></tr>';cnt.textContent='0개';renderPartMgrSummary();return;}
+  cnt.textContent=`${extraParts.length}개`;
+  tb.innerHTML=extraParts.map(ep=>`<tr><td style="font-family:monospace;font-size:.74rem;font-weight:700">${ep.pn}</td><td style="font-size:.78rem">${ep.name}</td><td><span class="badge badge-gray">${ep.type}</span></td><td><strong>${ep.vendor}</strong></td><td style="font-size:.75rem">${ep.country}</td><td style="font-size:.72rem;color:#a0aec0">${ep.addedAt||'-'}</td><td style="white-space:nowrap"><button class="btn btn-xs btn-danger" onclick="delExtraPart('${ep.pn}')">삭제</button></td></tr>`).join('');
+  renderPartMgrSummary();
+}
+function renderPartMgrSummary(){
+  document.getElementById('partMgrSummary').innerHTML=`
+    <div class="stat-card"><h4>전체 부품</h4><p>${PARTS.length}</p></div>
+    <div class="stat-card warning"><h4>🚨 문제 가능</h4><p>${PARTS.filter(p=>p.summary==='문제 가능').length}</p></div>
+    <div class="stat-card danger"><h4>🔄 진행중 ECO</h4><p>${(DB.eco||[]).filter(e=>e.status==='open').length}</p></div>
+    <div class="stat-card success"><h4>➕ 추가 부품</h4><p>${extraParts.length}</p></div>
+    <div class="stat-card"><h4>협력업체 수</h4><p>${new Set(PARTS.map(p=>p.vendor)).size}</p></div>
+  `;
+}
+
+// INIT
+mergeExtraParts();
+initPartFilters();
+initMechVendorFilter();
+initEcoFilters();
+renderDashboard();
+checkAlerts();
+renderDvBulkPartList();
+renderScBulkPartList();
+updateEcoBadge();
+
+['bulk_date','dv_bulk_order','dv_bulk_target','sc_bulk_date'].forEach(id=>{
+  const el=document.getElementById(id);if(el&&!el.value)el.value=today();
+});
+
+if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();
+</script>
+</body>
+</html>
